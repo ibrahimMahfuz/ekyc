@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:mysql://${MARIADB_HOST:45.76.146.204}:3306/ekyc
+    username: superadmin
+    password: cYN2U_fRKT3rT1Qy
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MariaDB103Dialect
+    open-in-view: true
+server:
+  port: 8300
+
+
+

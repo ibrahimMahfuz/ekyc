@@ -1,0 +1,17 @@
+version: '3'
+services:
+  ekyc:
+    container_name: ekyc
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8300:8300
+    networks:
+      - laradock_backend
+    environment:
+      MARIADB_HOST: 45.76.146.204
+    restart: unless-stopped
+networks:
+  laradock_backend:
+    external: true
