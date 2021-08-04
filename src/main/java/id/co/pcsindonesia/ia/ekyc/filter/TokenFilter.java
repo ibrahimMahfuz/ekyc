@@ -4,6 +4,7 @@ import id.co.pcsindonesia.ia.ekyc.entity.Terminal;
 import id.co.pcsindonesia.ia.ekyc.repository.TerminalRepository;
 import id.co.pcsindonesia.ia.ekyc.util.exception.DataNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -14,8 +15,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Optional;
 import java.util.UUID;
+
+import static java.time.ZoneOffset.UTC;
 
 @AllArgsConstructor
 public class TokenFilter extends OncePerRequestFilter {
@@ -39,7 +44,13 @@ public class TokenFilter extends OncePerRequestFilter {
         Terminal terminal = terminalRepository.findByToken(token).orElse(null);
 
         if (terminal == null) {
-            chain.doFilter(request, response);
+            handlerExceptionResolver.resolveException(request, response, null, new AccessDeniedException("your token is invalid"));
+            return;
+        }
+
+        long now = LocalDate.now().toEpochSecond(LocalTime.now(), UTC );
+        if (now > terminal.getExpired_at()){
+            handlerExceptionResolver.resolveException(request, response, null, new AccessDeniedException("your token is expired"));
             return;
         }
 
