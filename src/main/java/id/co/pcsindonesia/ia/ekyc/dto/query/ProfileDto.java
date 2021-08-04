@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 public class ProfileDto {
 
-    private UUID token;
+    private String token;
     private Long expiredAt;
     private Long terminalId;
     private Long profileId;

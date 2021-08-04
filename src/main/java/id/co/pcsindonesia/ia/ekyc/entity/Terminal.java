@@ -24,7 +24,7 @@ public class Terminal {
     private Profile profile;
 
     @Column(unique = true)
-    private UUID token;
+    private String token;
 
     private Long expired_at;
 }

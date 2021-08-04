@@ -35,8 +35,8 @@ public class ProfileQueryServiceImpl implements ProfileQueryService {
         Terminal terminal = terminalRepository.findById(terminalId).orElseThrow(DataNotFoundException::new);
 
         //set token
-        UUID uuid =UUID.randomUUID();
-        terminal.setToken(uuid);
+        String token =  UUID.randomUUID().toString();
+        terminal.setToken(token);
 
         //set expired_at
         long expiredAt = LocalDate.now().plusDays(10).toEpochSecond(LocalTime.now(), UTC );
@@ -56,7 +56,7 @@ public class ProfileQueryServiceImpl implements ProfileQueryService {
                 .profileId(terminal.getProfile().getId())
                 .terminalId(terminal.getId())
                 .expiredAt(expiredAt)
-                .token(uuid)
+                .token(token)
                 .profileServices(profileServiceDtos)
                 .build();
     }
