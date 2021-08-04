@@ -14,6 +14,6 @@ RUN mvn package -Dmaven.test.skip=true
 
 FROM adoptopenjdk/openjdk11
 
-COPY --from=build /build/target/auth-service-0.0.1-SNAPSHOT.jar /app/my-app.jar
+COPY --from=build /build/target/e-kyc-0.0.1-SNAPSHOT.jar /app/my-app.jar
 
 ENTRYPOINT ["java","-jar","/app/my-app.jar"]
