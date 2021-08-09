@@ -10,8 +10,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class ProfileServiceDto {
-
-    private Long vendorServiceId;
-    private Long serviceCategoryId;
+public class VidaAuthDto {
+    private String accessToken;
+    private String expiresIn;
+    private String refreshExpiresIn;
+    private String refreshToken;
+    private String tokenType;
+    private String sessionState;
+    private String scope;
 }

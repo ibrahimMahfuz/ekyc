@@ -6,13 +6,18 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MariaDB103Dialect
     open-in-view: true
 server:
   port: 8300
-
-
+logging:
+  level:
+    org:
+      apache:
+        http: debug
+    httpclient:
+      wire: debug
 

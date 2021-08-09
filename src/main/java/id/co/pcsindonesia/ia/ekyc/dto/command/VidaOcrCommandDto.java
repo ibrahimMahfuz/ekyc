@@ -1,17 +1,16 @@
-package id.co.pcsindonesia.ia.ekyc.dto.query;
+package id.co.pcsindonesia.ia.ekyc.dto.command;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
-@NoArgsConstructor
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class ProfileServiceDto {
+public class VidaOcrCommandDto {
+    private String ktpImage;
 
-    private Long vendorServiceId;
-    private Long serviceCategoryId;
 }

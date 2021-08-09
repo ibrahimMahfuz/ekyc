@@ -24,6 +24,12 @@ public class ExceptionResolver {
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(value = {DataNotFoundException.class})
+    public ResponseEntity<GlobalErrorDto> dataNotFoundHandler(DataNotFoundException ex) {
+        GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.NOT_FOUND.value(), ex.getMessage(), HttpStatus.NOT_FOUND.getReasonPhrase());
+        return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(value = {AuthenticationException.class})
     public ResponseEntity<GlobalErrorDto> unauthenticatedHandler(AuthenticationException ex) {
         if (ex.getMessage().equals("No value present")) ex = new InternalAuthenticationServiceException("username or password is wrong");

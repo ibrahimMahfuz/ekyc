@@ -2,7 +2,11 @@ package id.co.pcsindonesia.ia.ekyc.entity;
 
 import lombok.*;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -21,7 +25,7 @@ public class User {
 
     private String pob;
 
-    private Date dob;
+    private LocalDate dob;
 
     @Column(name = "phone_number", unique = true)
     private String phoneNumber;
