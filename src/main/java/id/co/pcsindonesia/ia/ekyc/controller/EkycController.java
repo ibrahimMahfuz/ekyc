@@ -3,6 +3,7 @@ package id.co.pcsindonesia.ia.ekyc.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.ProfileCommadDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.UserCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.*;
 import id.co.pcsindonesia.ia.ekyc.entity.User;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
@@ -11,7 +12,6 @@ import id.co.pcsindonesia.ia.ekyc.service.query.ProfileQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.AllArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,7 +43,7 @@ public class EkycController {
 
     @Operation(summary = "Register by OCR", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/register/ocr")
-    public ResponseEntity<GlobalDto<OcrDto>> registerOcr(@RequestBody OcrCommandDto body) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<UserDto>> registerOcr(@RequestBody OcrCommandDto body) throws JsonProcessingException, InterruptedException {
         VidaOcrDto ocr = ekycVidaCommandService.ocr(body);
         VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getTransactionId(), VidaStatusOcrDto.class);
         LocalDate ldate = LocalDate.parse(status.getResult().getTanggalLahir(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
@@ -59,18 +59,30 @@ public class EkycController {
 
     @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/register/form")
-    public ResponseEntity<GlobalDto<OcrDto>> registerForm(@RequestBody User user){
+    public ResponseEntity<GlobalDto<UserDto>> registerForm(@RequestBody UserCommandDto userCommandDto){
+        User user = User.builder()
+                .nik(userCommandDto.getNik())
+                .name(userCommandDto.getName())
+                .dob(userCommandDto.getDob())
+                .pob(userCommandDto.getPob())
+                .verified(false)
+                .build();
         return getGlobalDtoResponseEntity(user);
     }
 
-    private ResponseEntity<GlobalDto<OcrDto>> getGlobalDtoResponseEntity(User user) {
+    private ResponseEntity<GlobalDto<UserDto>> getGlobalDtoResponseEntity(User user) {
         User orCreate = userCommandService.getOrCreate(user);
-        OcrDto ocrDto = new OcrDto();
-        ocrDto.setIsVerified(orCreate.getVerified());
-        return new ResponseEntity<>(GlobalDto.<OcrDto>builder()
+        UserDto userQueryDto = UserDto.builder()
+                .nik(orCreate.getNik())
+                .name(orCreate.getName())
+                .dob(orCreate.getDob().toString())
+                .pob(orCreate.getPob())
+                .verified(orCreate.getVerified())
+                .build();
+        return new ResponseEntity<>(GlobalDto.<UserDto>builder()
                 .code(HttpStatus.OK.value())
                 .message(HttpStatus.OK.getReasonPhrase())
-                .result(ocrDto)
+                .result(userQueryDto)
                 .build(), HttpStatus.OK);
     }
 

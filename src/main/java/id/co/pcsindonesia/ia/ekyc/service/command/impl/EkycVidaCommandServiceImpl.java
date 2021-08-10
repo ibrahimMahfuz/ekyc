@@ -2,13 +2,14 @@ package id.co.pcsindonesia.ia.ekyc.service.command.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.co.pcsindonesia.ia.ekyc.dto.command.LnCidCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.VidaGlobalCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.VidaOcrCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.vidacid.VidaCidDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.VidaOcrDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.VidaStatusDto;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
-import id.co.pcsindonesia.ia.ekyc.service.command.UserCommandService;
 import lombok.AllArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.ResolvableType;
@@ -20,7 +21,7 @@ import java.util.Objects;
 
 @Service
 @AllArgsConstructor
-public class EkycVidaCommandServiceImpl<U,Q> implements EkycVidaCommandService<U,Q> {
+public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     private final OAuth2RestTemplate oAuth2RestTemplate;
     private static final String OCR_URL = "https://demo-verify.vida.id/1.3/ktp-ocr";
@@ -49,9 +50,15 @@ public class EkycVidaCommandServiceImpl<U,Q> implements EkycVidaCommandService<U
     }
 
     @Override
-    public U liveness(Q param) {
+    public VidaOcrDto liveness(LnCidCommandDto param) {
         return null;
     }
+
+    @Override
+    public VidaCidDto completeId(LnCidCommandDto param) {
+        return null;
+    }
+
 
     @Override
     public <T> VidaStatusDto<T> getStatus(String tid, Class<T> responseClass) throws InterruptedException {
