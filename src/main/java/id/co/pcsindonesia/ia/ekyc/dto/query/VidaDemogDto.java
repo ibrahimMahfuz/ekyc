@@ -2,12 +2,14 @@ package id.co.pcsindonesia.ia.ekyc.dto.query;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@AllArgsConstructor
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class VidaRefreshTokenDto {
-    private String accessToken;
+public class VidaDemogDto {
+    private String name;
+    private Double score;
+    private Double threshold;
+    private Boolean match;
+    private VidaExtraDto extra;
 }

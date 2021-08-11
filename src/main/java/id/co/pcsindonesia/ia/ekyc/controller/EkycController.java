@@ -1,10 +1,9 @@
 package id.co.pcsindonesia.ia.ekyc.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
-import id.co.pcsindonesia.ia.ekyc.dto.command.ProfileCommadDto;
-import id.co.pcsindonesia.ia.ekyc.dto.command.UserCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.*;
 import id.co.pcsindonesia.ia.ekyc.dto.query.*;
+import id.co.pcsindonesia.ia.ekyc.dto.query.VidaFaceMatchDto;
 import id.co.pcsindonesia.ia.ekyc.entity.User;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.UserCommandService;
@@ -44,14 +43,14 @@ public class EkycController {
     @Operation(summary = "Register by OCR", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/register/ocr")
     public ResponseEntity<GlobalDto<UserDto>> registerOcr(@RequestBody OcrCommandDto body) throws JsonProcessingException, InterruptedException {
-        VidaOcrDto ocr = ekycVidaCommandService.ocr(body);
-        VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getTransactionId(), VidaStatusOcrDto.class);
-        LocalDate ldate = LocalDate.parse(status.getResult().getTanggalLahir(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
+        VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
+        LocalDate ldate = LocalDate.parse(status.getData().getResult().getTanggalLahir(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
         User user = User.builder()
-                .nik(status.getResult().getNik())
-                .name(status.getResult().getNama())
+                .nik(status.getData().getResult().getNik())
+                .name(status.getData().getResult().getNama())
                 .dob(ldate)
-                .pob(status.getResult().getTempatLahir())
+                .pob(status.getData().getResult().getTempatLahir())
                 .verified(true)
                 .build();
         return getGlobalDtoResponseEntity(user);
@@ -59,7 +58,7 @@ public class EkycController {
 
     @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/register/form")
-    public ResponseEntity<GlobalDto<UserDto>> registerForm(@RequestBody UserCommandDto userCommandDto){
+    public ResponseEntity<GlobalDto<UserDto>> registerForm(@RequestBody UserCommandDto userCommandDto) throws JsonProcessingException, InterruptedException {
         User user = User.builder()
                 .nik(userCommandDto.getNik())
                 .name(userCommandDto.getName())
@@ -70,8 +69,23 @@ public class EkycController {
         return getGlobalDtoResponseEntity(user);
     }
 
-    private ResponseEntity<GlobalDto<UserDto>> getGlobalDtoResponseEntity(User user) {
-        User orCreate = userCommandService.getOrCreate(user);
+    @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/compositions/liveness-and-facematch")
+    public ResponseEntity<GlobalDto<VidaFmHandlerDto>> livenessAndFaceMatch(@RequestBody LnFmCommandDto body) throws JsonProcessingException, InterruptedException {
+        // -- skip -- ekycVidaCommandService.liveness(body);
+        VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
+        VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
+        VidaFmHandlerDto vidaFmHandlerDto = ekycVidaCommandService.completeIdHandler(status);
+        return new ResponseEntity<>(GlobalDto.<VidaFmHandlerDto>builder()
+                .code(HttpStatus.OK.value())
+                .message(HttpStatus.OK.getReasonPhrase())
+                .result(vidaFmHandlerDto)
+                .build(), HttpStatus.OK);
+    }
+
+    private ResponseEntity<GlobalDto<UserDto>> getGlobalDtoResponseEntity(User user) throws JsonProcessingException, InterruptedException {
+        GetOrCreateUserDto getOrCreateUserDto = userCommandService.getOrCreate(user);
+        User orCreate = getOrCreateUserDto.getUser();
         UserDto userQueryDto = UserDto.builder()
                 .nik(orCreate.getNik())
                 .name(orCreate.getName())
@@ -79,6 +93,24 @@ public class EkycController {
                 .pob(orCreate.getPob())
                 .verified(orCreate.getVerified())
                 .build();
+        if (!getOrCreateUserDto.getIsGet()){
+            VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.demogLite(VidaDemogCommandDto.builder()
+                    .nik(orCreate.getNik())
+                    .fullName(orCreate.getName())
+                    .dob(orCreate.getDob().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                    .phoneNo(orCreate.getPhoneNumber())
+                    .email(orCreate.getEmail())
+                    .build());
+            VidaStatusDto<VidaDemogDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaDemogDto.class);
+            if (!status.getData().getResult().getMatch()){
+                userQueryDto.setVerified(false);
+                orCreate.setVerified(false);
+            }else {
+                userQueryDto.setVerified(true);
+                orCreate.setVerified(true);
+            }
+            userCommandService.updateUser(orCreate);
+        }
         return new ResponseEntity<>(GlobalDto.<UserDto>builder()
                 .code(HttpStatus.OK.value())
                 .message(HttpStatus.OK.getReasonPhrase())

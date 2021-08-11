@@ -16,11 +16,11 @@ import java.util.List;
 @Configuration
 public class OAuth2Config {
 
-    private static final String TOKEN_URL= "https://auth-demo.vida.id/auth/realms/authoritative/protocol/openid-connect/token";
-    private static final String CLIENT_ID= "pcs-demo";
-    private static final String CLIENT_SECRET= "7df09c1c-76a4-4746-9cf4-ef2b02e1d689";
+    private static final String TOKEN_URL= "https://qa-sso.vida.id/auth/realms/vida/protocol/openid-connect/token";
+    private static final String CLIENT_ID= "partner-pcs";
+    private static final String CLIENT_SECRET= "87eecd71-efa6-4411-a1b4-948798ee3ccb";
     private static final String GRANT_TYPE= "client_credentials";
-    private static final String SCOPE= "kyc_scope";
+    private static final String SCOPE= "roles";
 
     @Bean
     protected OAuth2ProtectedResourceDetails oauth2Resource() {
@@ -37,8 +37,11 @@ public class OAuth2Config {
     @Bean
     public OAuth2RestTemplate oauth2RestTemplate() {
         AccessTokenRequest atr = new DefaultAccessTokenRequest();
-        OAuth2RestTemplate oauth2RestTemplate = new OAuth2RestTemplate(oauth2Resource(), new DefaultOAuth2ClientContext(atr));
-        oauth2RestTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+        OAuth2ProtectedResourceDetails oAuth2ProtectedResourceDetails = oauth2Resource();
+        DefaultOAuth2ClientContext defaultOAuth2ClientContext = new DefaultOAuth2ClientContext(atr);
+        OAuth2RestTemplate oauth2RestTemplate = new OAuth2RestTemplate(oAuth2ProtectedResourceDetails, defaultOAuth2ClientContext);
+        HttpComponentsClientHttpRequestFactory httpComponentsClientHttpRequestFactory = new HttpComponentsClientHttpRequestFactory();
+        oauth2RestTemplate.setRequestFactory(httpComponentsClientHttpRequestFactory);
         return oauth2RestTemplate;
     }
 }

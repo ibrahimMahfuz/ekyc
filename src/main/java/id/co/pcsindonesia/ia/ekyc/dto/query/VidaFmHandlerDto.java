@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-@AllArgsConstructor
 @Data
+@AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class VidaRefreshTokenDto {
-    private String accessToken;
+public class VidaFmHandlerDto {
+    private Boolean isVerified;
 }

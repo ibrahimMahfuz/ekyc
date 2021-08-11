@@ -1,22 +1,20 @@
-package id.co.pcsindonesia.ia.ekyc.dto.command;
+package id.co.pcsindonesia.ia.ekyc.dto.query;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import id.co.pcsindonesia.ia.ekyc.dto.query.VidaExtraFieldDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
+import java.util.List;
 
 @AllArgsConstructor
-@Setter
+@NoArgsConstructor
 @Getter
+@Setter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class UserCommandDto {
-    private Long nik;
-    private String name;
-    private String pob;
-    private LocalDate dob;
-    private String phoneNumber;
-    private String email;
+public class VidaExtraDto {
+    private List<VidaExtraFieldDto> fields;
 }

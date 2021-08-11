@@ -7,7 +7,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Getter
@@ -27,10 +26,9 @@ public class User {
 
     private LocalDate dob;
 
-    @Column(name = "phone_number", unique = true)
+    @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Column(unique = true)
     private String email;
 
     private Boolean verified;

@@ -1,7 +1,10 @@
 package id.co.pcsindonesia.ia.ekyc.service.command;
 
+import id.co.pcsindonesia.ia.ekyc.dto.query.GetOrCreateUserDto;
 import id.co.pcsindonesia.ia.ekyc.entity.User;
 
 public interface UserCommandService {
-    public User getOrCreate(User userParam);
+    public GetOrCreateUserDto getOrCreate(User userParam);
+
+    void updateUser(User orCreate);
 }

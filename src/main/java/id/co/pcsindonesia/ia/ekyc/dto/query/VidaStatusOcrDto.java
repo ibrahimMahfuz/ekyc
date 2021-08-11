@@ -1,15 +1,15 @@
 package id.co.pcsindonesia.ia.ekyc.dto.query;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
 @Data
-@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class VidaStatusOcrDto {
     private Long nik;
     private String provinsi;
-    private String kabupaten_kota;
+    private String kabupatenKota;
     private String golonganDarah;
     private String agama;
     private String alamat;

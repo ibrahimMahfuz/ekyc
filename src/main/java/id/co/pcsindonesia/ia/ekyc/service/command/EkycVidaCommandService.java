@@ -1,15 +1,35 @@
 package id.co.pcsindonesia.ia.ekyc.service.command;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import id.co.pcsindonesia.ia.ekyc.dto.command.LnCidCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.LnFmCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
-import id.co.pcsindonesia.ia.ekyc.dto.query.vidacid.VidaCidDto;
-import id.co.pcsindonesia.ia.ekyc.dto.query.VidaOcrDto;
-import id.co.pcsindonesia.ia.ekyc.dto.query.VidaStatusDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.VidaDemogCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.*;
+import id.co.pcsindonesia.ia.ekyc.dto.query.VidaFaceMatchDto;
 
-public interface EkycVidaCommandService extends EkycCommandService<VidaOcrDto, OcrCommandDto, VidaOcrDto, LnCidCommandDto, VidaCidDto>{
+public interface EkycVidaCommandService extends
+        EkycCommandService<
+                VidaGlobalDto<VidaTransactionDto>,
+                OcrCommandDto,
+                VidaGlobalDto<VidaTransactionDto>,
+                LnFmCommandDto,
+                VidaGlobalDto<VidaTransactionDto>,
+                VidaFmHandlerDto,
+                VidaStatusDto<VidaFaceMatchDto>
+                >{
     @Override
-    VidaOcrDto ocr(OcrCommandDto param) throws JsonProcessingException;
+    VidaGlobalDto<VidaTransactionDto> ocr(OcrCommandDto param) throws JsonProcessingException;
+
+    @Override
+    VidaGlobalDto<VidaTransactionDto> liveness(LnFmCommandDto param) throws JsonProcessingException;
+
+    @Override
+    VidaGlobalDto<VidaTransactionDto> faceMatch(LnFmCommandDto param) throws JsonProcessingException;
+
+    @Override
+    VidaFmHandlerDto completeIdHandler(VidaStatusDto<VidaFaceMatchDto> param);
+
     public <T> VidaStatusDto<T> getStatus(String tid, Class<T> responseClass) throws InterruptedException;
 
+    public VidaGlobalDto<VidaTransactionDto> demogLite(VidaDemogCommandDto vidaDemogCommandDto) throws JsonProcessingException;
 }

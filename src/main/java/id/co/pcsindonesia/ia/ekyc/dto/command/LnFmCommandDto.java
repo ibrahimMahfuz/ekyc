@@ -2,21 +2,17 @@ package id.co.pcsindonesia.ia.ekyc.dto.command;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDate;
 
-@AllArgsConstructor
-@Setter
-@Getter
+@Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class UserCommandDto {
+public class LnFmCommandDto {
     private Long nik;
-    private String name;
-    private String pob;
+    private String fullName;
     private LocalDate dob;
-    private String phoneNumber;
     private String email;
+    private String phoneNo;
+    private String faceImage;
 }

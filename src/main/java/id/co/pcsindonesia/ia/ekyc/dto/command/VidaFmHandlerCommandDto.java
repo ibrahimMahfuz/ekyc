@@ -1,13 +1,13 @@
-package id.co.pcsindonesia.ia.ekyc.dto.query;
+package id.co.pcsindonesia.ia.ekyc.dto.command;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
-@AllArgsConstructor
 @Data
+@Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class VidaRefreshTokenDto {
-    private String accessToken;
+public class VidaFmHandlerCommandDto {
 }

@@ -1,17 +1,16 @@
 package id.co.pcsindonesia.ia.ekyc.dto.command;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-@JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
-public class VidaCidCommandDto {
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@Builder
+public class VidaFmCommandDto {
             private Long nik;
-            private String fullName;
-            private String dob;
             private String email;
             private String phoneNo;
-            private Double faceThresold;
             private String faceImage;
 }
