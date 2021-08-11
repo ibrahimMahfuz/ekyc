@@ -10,8 +10,6 @@ import java.time.LocalDate;
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class LnFmCommandDto {
     private Long nik;
-    private String fullName;
-    private LocalDate dob;
     private String email;
     private String phoneNo;
     private String faceImage;
