@@ -2,9 +2,10 @@ package id.co.pcsindonesia.ia.ekyc.service.command.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import id.co.pcsindonesia.ia.ekyc.dto.command.*;
-import id.co.pcsindonesia.ia.ekyc.dto.query.*;
-import id.co.pcsindonesia.ia.ekyc.dto.query.VidaFaceMatchDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.LnFmCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.vida.*;
+import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.ResolvableType;

@@ -1,9 +1,16 @@
 package id.co.pcsindonesia.ia.ekyc.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import id.co.pcsindonesia.ia.ekyc.dto.command.*;
-import id.co.pcsindonesia.ia.ekyc.dto.query.*;
-import id.co.pcsindonesia.ia.ekyc.dto.query.VidaFaceMatchDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.LnFmCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.ProfileCommadDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.UserCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.vida.VidaDemogCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.GetOrCreateUserDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.GlobalDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.ProfileDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.UserDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 import id.co.pcsindonesia.ia.ekyc.entity.User;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.UserCommandService;
@@ -18,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+import javax.validation.ValidationException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
@@ -42,7 +51,7 @@ public class EkycController {
 
     @Operation(summary = "Register by OCR", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/register/ocr")
-    public ResponseEntity<GlobalDto<UserDto>> registerOcr(@RequestBody OcrCommandDto body) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<UserDto>> registerOcr(@Valid @RequestBody OcrCommandDto body) throws JsonProcessingException, InterruptedException {
         VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
         VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
         LocalDate ldate = LocalDate.parse(status.getData().getResult().getTanggalLahir(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
@@ -58,7 +67,7 @@ public class EkycController {
 
     @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/register/form")
-    public ResponseEntity<GlobalDto<UserDto>> registerForm(@RequestBody UserCommandDto userCommandDto) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<UserDto>> registerForm(@Valid @RequestBody UserCommandDto userCommandDto) throws JsonProcessingException, InterruptedException {
         User user = User.builder()
                 .nik(userCommandDto.getNik())
                 .name(userCommandDto.getName())
@@ -71,7 +80,7 @@ public class EkycController {
 
     @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/compositions/liveness-and-facematch")
-    public ResponseEntity<GlobalDto<VidaFmHandlerDto>> livenessAndFaceMatch(@RequestBody LnFmCommandDto body) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<VidaFmHandlerDto>> livenessAndFaceMatch(@Valid @RequestBody LnFmCommandDto body) throws JsonProcessingException, InterruptedException {
         // -- skip -- ekycVidaCommandService.liveness(body);
         VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
         VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);

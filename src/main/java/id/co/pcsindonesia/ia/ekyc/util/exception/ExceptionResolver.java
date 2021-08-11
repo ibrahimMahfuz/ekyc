@@ -1,6 +1,7 @@
 package id.co.pcsindonesia.ia.ekyc.util.exception;
 
 import id.co.pcsindonesia.ia.ekyc.dto.query.GlobalErrorDto;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -8,6 +9,8 @@ import org.springframework.security.authentication.InternalAuthenticationService
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import javax.validation.ValidationException;
 
 @RestControllerAdvice
 public class ExceptionResolver {
@@ -28,6 +31,12 @@ public class ExceptionResolver {
     public ResponseEntity<GlobalErrorDto> dataNotFoundHandler(DataNotFoundException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.NOT_FOUND.value(), ex.getMessage(), HttpStatus.NOT_FOUND.getReasonPhrase());
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(value = {InvalidDataAccessApiUsageException.class})
+    public ResponseEntity<GlobalErrorDto> dataNotFoundHandler(InvalidDataAccessApiUsageException ex) {
+        GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), HttpStatus.BAD_REQUEST.getReasonPhrase());
+        return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(value = {AuthenticationException.class})

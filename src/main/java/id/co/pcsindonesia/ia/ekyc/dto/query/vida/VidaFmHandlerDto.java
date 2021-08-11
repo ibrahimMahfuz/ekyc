@@ -1,13 +1,13 @@
-package id.co.pcsindonesia.ia.ekyc.dto.command;
+package id.co.pcsindonesia.ia.ekyc.dto.query.vida;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 
 @Data
-@Builder
+@AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class VidaFmHandlerCommandDto {
+public class VidaFmHandlerDto {
+    private Boolean isVerified;
 }

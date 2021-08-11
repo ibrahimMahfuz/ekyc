@@ -1,4 +1,4 @@
-package id.co.pcsindonesia.ia.ekyc.dto.query;
+package id.co.pcsindonesia.ia.ekyc.dto.query.vida;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
@@ -12,7 +12,11 @@ import lombok.Setter;
 @Getter
 @Setter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class VidaExtraFieldDto {
-    private String field;
+public class VidaFaceMatchDto {
+    private String name;
     private Double score;
+    private Double threshold;
+    private Boolean match;
+    private VidaExtraDto extra;
+
 }

@@ -1,8 +1,7 @@
-package id.co.pcsindonesia.ia.ekyc.dto.query;
+package id.co.pcsindonesia.ia.ekyc.dto.query.vida;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import id.co.pcsindonesia.ia.ekyc.dto.query.VidaExtraDto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,11 +14,6 @@ import java.util.List;
 @Getter
 @Setter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class VidaFaceMatchDto {
-    private String name;
-    private Double score;
-    private Double threshold;
-    private Boolean match;
-    private VidaExtraDto extra;
-
+public class VidaExtraDto {
+    private List<VidaExtraFieldDto> fields;
 }

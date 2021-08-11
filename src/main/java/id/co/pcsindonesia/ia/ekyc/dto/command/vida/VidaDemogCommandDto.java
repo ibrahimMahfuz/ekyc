@@ -1,4 +1,4 @@
-package id.co.pcsindonesia.ia.ekyc.dto.command;
+package id.co.pcsindonesia.ia.ekyc.dto.command.vida;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

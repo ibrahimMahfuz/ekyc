@@ -3,9 +3,8 @@ package id.co.pcsindonesia.ia.ekyc.service.command;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import id.co.pcsindonesia.ia.ekyc.dto.command.LnFmCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
-import id.co.pcsindonesia.ia.ekyc.dto.command.VidaDemogCommandDto;
-import id.co.pcsindonesia.ia.ekyc.dto.query.*;
-import id.co.pcsindonesia.ia.ekyc.dto.query.VidaFaceMatchDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.vida.VidaDemogCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 
 public interface EkycVidaCommandService extends
         EkycCommandService<

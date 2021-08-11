@@ -1,16 +1,13 @@
-package id.co.pcsindonesia.ia.ekyc.dto.command;
+package id.co.pcsindonesia.ia.ekyc.dto.query.vida;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
 @AllArgsConstructor
+@Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class VidaOcrCommandDto {
-    private String ktpImage;
-
+public class VidaRefreshTokenDto {
+    private String accessToken;
 }
