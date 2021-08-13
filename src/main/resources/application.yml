@@ -12,7 +12,7 @@ spring:
         dialect: org.hibernate.dialect.MariaDB103Dialect
     open-in-view: true
 server:
-  port: 8300
+  port: 80
 logging:
   level:
     org:

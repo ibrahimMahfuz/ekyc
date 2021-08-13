@@ -65,6 +65,18 @@ public class EkycController {
         return getGlobalDtoResponseEntity(user);
     }
 
+    @Operation(summary = "OCR Only", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/ocr")
+    public ResponseEntity<GlobalDto<VidaStatusOcrDto>> ocr(@Valid @RequestBody OcrCommandDto body) throws JsonProcessingException, InterruptedException {
+        VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
+        VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
+        return new ResponseEntity<>(GlobalDto.<VidaStatusOcrDto>builder()
+                .code(HttpStatus.OK.value())
+                .message(HttpStatus.OK.getReasonPhrase())
+                .result(status.getData().getResult())
+                .build(), HttpStatus.OK);
+    }
+
     @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/register/form")
     public ResponseEntity<GlobalDto<UserDto>> registerForm(@Valid @RequestBody UserCommandDto userCommandDto) throws JsonProcessingException, InterruptedException {
@@ -78,7 +90,7 @@ public class EkycController {
         return getGlobalDtoResponseEntity(user);
     }
 
-    @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Liveness and facematch", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/compositions/liveness-and-facematch")
     public ResponseEntity<GlobalDto<VidaFmHandlerDto>> livenessAndFaceMatch(@Valid @RequestBody LnFmCommandDto body) throws JsonProcessingException, InterruptedException {
         // -- skip -- ekycVidaCommandService.liveness(body);
