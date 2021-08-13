@@ -2,6 +2,7 @@ package id.co.pcsindonesia.ia.ekyc.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.security.oauth2.client.DefaultOAuth2ClientContext;
 import org.springframework.security.oauth2.client.OAuth2RestTemplate;
@@ -23,6 +24,7 @@ public class OAuth2Config {
     private static final String SCOPE= "roles";
 
     @Bean
+    @Scope("prototype")
     protected OAuth2ProtectedResourceDetails oauth2Resource() {
         ClientCredentialsResourceDetails clientCredentialsResourceDetails = new ClientCredentialsResourceDetails();
         clientCredentialsResourceDetails.setAccessTokenUri(TOKEN_URL);
@@ -35,6 +37,7 @@ public class OAuth2Config {
     }
 
     @Bean
+    @Scope("prototype")
     public OAuth2RestTemplate oauth2RestTemplate() {
         AccessTokenRequest atr = new DefaultAccessTokenRequest();
         OAuth2ProtectedResourceDetails oAuth2ProtectedResourceDetails = oauth2Resource();
