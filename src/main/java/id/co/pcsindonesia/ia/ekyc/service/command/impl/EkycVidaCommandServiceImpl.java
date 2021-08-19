@@ -7,6 +7,7 @@ import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.vida.*;
 import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
+import lombok.AllArgsConstructor;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.*;
@@ -17,9 +18,9 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Objects;
 
 @Service
+@AllArgsConstructor
 public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
-    private final OAuth2RestTemplate oAuth2RestTemplate;
     private final RestTemplate restTemplate;
     private static final String OCR_URL = "https://services-sandbox.vida.id/verify/v1/ktp/ocr";
     private static final String STATUS_URL = "https://services-sandbox.vida.id/verify/v1/transaction/";
@@ -29,17 +30,12 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
     private static final Double CID_TRHESHOLD = 3.0;
     private static final Double DEMOG_TRHESHOLD = 1.0;
 
-    public EkycVidaCommandServiceImpl(OAuth2RestTemplate oAuth2RestTemplate, RestTemplate restTemplate) {
-        this.restTemplate = restTemplate;
-        this.oAuth2RestTemplate = oAuth2RestTemplate;
-    }
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> ocr(OcrCommandDto param) throws JsonProcessingException {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(oAuth2RestTemplate.getAccessToken().getValue());
 
         VidaOcrCommandDto vidaOcrCommandDto = new VidaOcrCommandDto(param.getPhoto());
         VidaGlobalCommandDto<VidaOcrCommandDto> body = new VidaGlobalCommandDto<>(vidaOcrCommandDto);
@@ -70,7 +66,6 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
     public VidaGlobalDto<VidaTransactionDto> faceMatch(LnFmCommandDto param) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(oAuth2RestTemplate.getAccessToken().getValue());
 
         VidaFmCommandDto vidaCidCommandDto = VidaFmCommandDto.builder()
                 .nik(param.getNik())
@@ -108,7 +103,6 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         final String FULL_URL = STATUS_URL + tid;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(oAuth2RestTemplate.getAccessToken().getValue());
 
         HttpEntity<String> entity = new HttpEntity<>("", headers);
 
@@ -156,7 +150,6 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
     public VidaGlobalDto<VidaTransactionDto> demogLite(VidaDemogCommandDto vidaDemogCommandDto) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(oAuth2RestTemplate.getAccessToken().getValue());
 
         if (vidaDemogCommandDto.getEmail() == null) vidaDemogCommandDto.setEmail("nullEmail@emai.com");
         if (vidaDemogCommandDto.getPhoneNo() == null ) vidaDemogCommandDto.setPhoneNo("081234567809");

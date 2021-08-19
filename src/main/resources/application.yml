@@ -20,4 +20,12 @@ logging:
         http: debug
     httpclient:
       wire: debug
+vida:
+  oauth2:
+    client:
+      grantType: client_credentials
+      clientId: partner-pcs
+      clientSecret: 87eecd71-efa6-4411-a1b4-948798ee3ccb
+      accessTokenUri: https://qa-sso.vida.id/auth/realms/vida/protocol/openid-connect/token
+      scope: roles
 
