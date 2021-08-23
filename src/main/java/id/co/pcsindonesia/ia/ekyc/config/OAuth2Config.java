@@ -25,9 +25,16 @@ public class OAuth2Config {
         return new ClientCredentialsResourceDetails();
     }
 
-    @Bean
+    @Bean("vidaRestTemplate")
     protected RestTemplate restTemplate() {
         RestTemplate restTemplate = new OAuth2RestTemplate(oAuthDetails());
+        restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
+        return restTemplate;
+    }
+
+    @Bean("asliriRestTemplate")
+    protected RestTemplate restTemplate2(){
+        RestTemplate restTemplate = new RestTemplate();
         restTemplate.setRequestFactory(new HttpComponentsClientHttpRequestFactory());
         return restTemplate;
     }

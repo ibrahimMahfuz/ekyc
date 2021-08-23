@@ -7,18 +7,17 @@ import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.vida.*;
 import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.*;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Objects;
 
 @Service
-@AllArgsConstructor
 public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     private final RestTemplate restTemplate;
@@ -29,6 +28,11 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
     private static final Double FACE_TRHESHOLD = 6.0;
     private static final Double CID_TRHESHOLD = 3.0;
     private static final Double DEMOG_TRHESHOLD = 1.0;
+
+    @Autowired
+    public EkycVidaCommandServiceImpl(@Qualifier("vidaRestTemplate") RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
 
     @Override

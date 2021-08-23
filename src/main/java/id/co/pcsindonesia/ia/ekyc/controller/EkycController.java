@@ -5,13 +5,17 @@ import id.co.pcsindonesia.ia.ekyc.dto.command.LnFmCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.ProfileCommadDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.UserCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiExtraTaxCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.vida.VidaDemogCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.GetOrCreateUserDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.GlobalDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.ProfileDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.UserDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiExtraTaxDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiGlobalDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 import id.co.pcsindonesia.ia.ekyc.entity.User;
+import id.co.pcsindonesia.ia.ekyc.service.command.EkycAsliRiCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.UserCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.query.ProfileQueryService;
@@ -37,6 +41,7 @@ public class EkycController {
 
     private final ProfileQueryService profileQueryService;
     private final EkycVidaCommandService ekycVidaCommandService;
+    private final EkycAsliRiCommandService ekycAsliRiCommandService;
     private final UserCommandService userCommandService;
 
     @PostMapping("/profiles")
@@ -103,6 +108,49 @@ public class EkycController {
                 .result(vidaFmHandlerDto)
                 .build(), HttpStatus.OK);
     }
+
+    @Operation(summary = "Extra Tax", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/extra-taxes")
+    public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> livenessAndFaceMatch(@Valid @RequestBody AsliRiExtraTaxCommandDto body) throws JsonProcessingException, InterruptedException {
+        AsliRiGlobalDto<AsliRiExtraTaxDto> asliRiExtraTaxDtoAsliRiGlobalDto = ekycAsliRiCommandService.extraTaxVerification(body);
+        return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiExtraTaxDto>>builder()
+                .code(HttpStatus.OK.value())
+                .message(HttpStatus.OK.getReasonPhrase())
+                .result(asliRiExtraTaxDtoAsliRiGlobalDto)
+                .build(), HttpStatus.OK);
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     private ResponseEntity<GlobalDto<UserDto>> getGlobalDtoResponseEntity(User user) throws JsonProcessingException, InterruptedException {
         GetOrCreateUserDto getOrCreateUserDto = userCommandService.getOrCreate(user);
