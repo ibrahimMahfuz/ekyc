@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
@@ -12,6 +13,7 @@ import javax.validation.constraints.Size;
 import java.time.LocalDate;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Setter
 @Getter
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
