@@ -41,7 +41,7 @@ asliri:
     token: ${ASLIRI_TOKEN:OWIwNmFjOGYtYzZiOC00NGI1LTkwNzEtZWQ1OWVlZDk0YTRm}
 ekyc:
   vendor:
-    vida: ${EKYC_VENDOR_VIDA:2}
+    vida: ${EKYC_VENDOR_VIDA:1}
     vj: ${EKYC_VENDOR_VJ:2}
     asliRi: ${EKYC_VENDOR_ASLIRI:3}
   service:
