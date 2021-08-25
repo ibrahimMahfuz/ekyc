@@ -6,7 +6,7 @@ spring:
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MariaDB103Dialect
@@ -28,4 +28,25 @@ vida:
       clientSecret: 87eecd71-efa6-4411-a1b4-948798ee3ccb
       accessTokenUri: https://qa-sso.vida.id/auth/realms/vida/protocol/openid-connect/token
       scope: roles
-
+  properties:
+    ocrUlr: https://services-sandbox.vida.id/verify/v1/ktp/ocr
+    statusTransactionUrl: https://services-sandbox.vida.id/verify/v1/transaction/
+    faceMatchUrl: https://services-sandbox.vida.id/verify/v1/face/match
+    demogLiteUrl: https://services-sandbox.vida.id/verify/v1/demog-lite
+    faceThreshold: 3.0
+    demogThreshold: 1.0
+asliri:
+  properties:
+    extraTaxUrl: https://api.asliri.id:8443/pcs_poc/verify_tax_extra
+    token: OWIwNmFjOGYtYzZiOC00NGI1LTkwNzEtZWQ1OWVlZDk0YTRm
+ekyc:
+  vendor:
+    vida: 1
+    vj: 2
+    asliRi: 3
+  service:
+    ocr: 1
+    liveness: 2
+    faceMatch: 3
+    demog: 4
+    extraTax: 5

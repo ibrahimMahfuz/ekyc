@@ -1,6 +1,5 @@
 package id.co.pcsindonesia.ia.ekyc.dto.command.asliri;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.AllArgsConstructor;

@@ -7,6 +7,9 @@ import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.vida.*;
 import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
+import id.co.pcsindonesia.ia.ekyc.util.exception.RequestTimeOutException;
+import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServerException;
+import id.co.pcsindonesia.ia.ekyc.util.properties.VidaProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -21,17 +24,12 @@ import java.util.Objects;
 public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     private final RestTemplate restTemplate;
-    private static final String OCR_URL = "https://services-sandbox.vida.id/verify/v1/ktp/ocr";
-    private static final String STATUS_URL = "https://services-sandbox.vida.id/verify/v1/transaction/";
-    private static final String CID_URL = "https://services-sandbox.vida.id/verify/v1/face/match";
-    private static final String DEMOG_URL = "https://services-sandbox.vida.id/verify/v1/demog-lite";
-    private static final Double FACE_TRHESHOLD = 6.0;
-    private static final Double CID_TRHESHOLD = 3.0;
-    private static final Double DEMOG_TRHESHOLD = 1.0;
+    private final VidaProperty vidaProperty;
 
     @Autowired
-    public EkycVidaCommandServiceImpl(@Qualifier("vidaRestTemplate") RestTemplate restTemplate) {
+    public EkycVidaCommandServiceImpl(@Qualifier("vidaRestTemplate") RestTemplate restTemplate, VidaProperty vidaProperty) {
         this.restTemplate = restTemplate;
+        this.vidaProperty = vidaProperty;
     }
 
 
@@ -48,22 +46,17 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
         ResponseEntity<VidaGlobalDto<VidaTransactionDto>> response = restTemplate.exchange(
-                OCR_URL,
+                vidaProperty.getOcrUlr(),
                 HttpMethod.POST,
                 request,
                 ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaTransactionDto.class).getType())
         );
-
-         if (response.getStatusCode() == HttpStatus.OK){
-             return response.getBody();
-         }else {
-             throw new RuntimeException("error get ocr");
-         }
+        return response.getBody();
     }
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> liveness(LnFmCommandDto param) throws JsonProcessingException {
-        return null;
+        throw new VendorServerException("vida liveness service not found");
     }
 
     @Override
@@ -77,23 +70,18 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                 .email(param.getEmail())
                 .faceImage(param.getFaceImage())
                 .build();
-        VidaAnotherGlobalCommandDto<VidaFmCommandDto> body = new VidaAnotherGlobalCommandDto<>(CID_TRHESHOLD, vidaCidCommandDto);
+        VidaAnotherGlobalCommandDto<VidaFmCommandDto> body = new VidaAnotherGlobalCommandDto<>(vidaProperty.getFaceThreshold(), vidaCidCommandDto);
         ObjectMapper objectMapper = new ObjectMapper();
         String bodyString = objectMapper.writeValueAsString(body);
 
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
         ResponseEntity<VidaGlobalDto<VidaTransactionDto>> response = restTemplate.exchange(
-                CID_URL,
+                vidaProperty.getFaceMatchUrl(),
                 HttpMethod.POST,
                 request,
                 ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaTransactionDto.class).getType())
         );
-
-        if (response.getStatusCode() == HttpStatus.OK){
-            return response.getBody();
-        }else {
-            throw new RuntimeException("error get complete id");
-        }
+        return response.getBody();
     }
 
     @Override
@@ -104,49 +92,29 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     @Override
     public <T> VidaStatusDto<T> getStatus(String tid, Class<T> responseClass) throws InterruptedException {
-        final String FULL_URL = STATUS_URL + tid;
+        final String FULL_URL = vidaProperty.getStatusTransactionUrl() + tid;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
         HttpEntity<String> entity = new HttpEntity<>("", headers);
+        return sendGetStatus(FULL_URL, entity, responseClass, 1);
+    }
 
-        ResponseEntity<VidaStatusDto<T>> response =
-        restTemplate.exchange(
-                FULL_URL,
-                HttpMethod.GET,
-                entity,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaStatusDto.class, responseClass).getType())
-        );
-        VidaStatusDto<T> body = response.getBody();
-        if (Objects.equals(body.getData().getStatus(), "success")){
-            return body;
-        }else {
-            Thread.sleep(1000);
-            ResponseEntity<VidaStatusDto<T>> response2 = restTemplate.exchange(
-                    FULL_URL,
-                    HttpMethod.GET,
-                    entity,
-                    ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaStatusDto.class, responseClass).getType())
-            );
-            VidaStatusDto<T> body2 = response2.getBody();
-            if (Objects.equals(body2.getData().getStatus(), "success")){
-                return body2;
-            }else {
-                Thread.sleep(2000);
-                ResponseEntity<VidaStatusDto<T>> response3 =
+    private <K> VidaStatusDto<K> sendGetStatus(String url, HttpEntity<String> entity, Class<K> responseClass, Integer loop) throws InterruptedException {
+        Thread.sleep((loop*1000));
+        ResponseEntity<VidaStatusDto<K>> response =
                 restTemplate.exchange(
-                        FULL_URL,
+                        url,
                         HttpMethod.GET,
                         entity,
                         ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaStatusDto.class, responseClass).getType())
                 );
-                VidaStatusDto<T> body3 = response3.getBody();
-                if (Objects.equals(body3.getData().getStatus(), "success")) {
-                    return body3;
-                }else {
-                    throw new RuntimeException("error get status ocr");
-                }
-            }
+        VidaStatusDto<K> body = response.getBody();
+        if (Objects.equals(body.getData().getStatus(), "success")){
+            return body;
+        } else if (loop == 3){
+           throw new RequestTimeOutException("get status too long");
+        } else {
+            return sendGetStatus(url, entity, responseClass, loop+1);
         }
     }
 
@@ -159,22 +127,17 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         if (vidaDemogCommandDto.getPhoneNo() == null ) vidaDemogCommandDto.setPhoneNo("081234567809");
 
         ObjectMapper objectMapper = new ObjectMapper();
-        VidaAnotherGlobalCommandDto<VidaDemogCommandDto> body = new VidaAnotherGlobalCommandDto<>(DEMOG_TRHESHOLD, vidaDemogCommandDto);
+        VidaAnotherGlobalCommandDto<VidaDemogCommandDto> body = new VidaAnotherGlobalCommandDto<>(vidaProperty.getDemogThreshold(), vidaDemogCommandDto);
         String bodyString = objectMapper.writeValueAsString(body);
 
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
         ResponseEntity<VidaGlobalDto<VidaTransactionDto>> response = restTemplate.exchange(
-                DEMOG_URL,
+                vidaProperty.getDemogLiteUrl(),
                 HttpMethod.POST,
                 request,
                 ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaTransactionDto.class).getType())
         );
-
-        if (response.getStatusCode() == HttpStatus.OK){
-            return response.getBody();
-        }else {
-            throw new RuntimeException("error get demog");
-        }
+        return response.getBody();
     }
 
 
