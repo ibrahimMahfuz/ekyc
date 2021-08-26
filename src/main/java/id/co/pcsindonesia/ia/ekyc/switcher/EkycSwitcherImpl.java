@@ -33,21 +33,21 @@ public class EkycSwitcherImpl implements EkycSwitcher{
 
     @Override
     public Long getOcrType(List<ProfileServiceDto> profileServiceDtoList) {
-        return getType(profileServiceDtoList, ekycServiceCategoryProperty.getOcr());
+        return getType(profileServiceDtoList, ekycServiceCategoryProperty.getOcr(), "OCR");
     }
 
     @Override
     public Long getDemogType(List<ProfileServiceDto> profileServiceDtoList) {
-        return getType(profileServiceDtoList, ekycServiceCategoryProperty.getDemog());
+        return getType(profileServiceDtoList, ekycServiceCategoryProperty.getDemog(), "DEMOG");
     }
 
 
-    private Long getType(List<ProfileServiceDto> profileServiceDtoList, Long vendorId){
+    private Long getType(List<ProfileServiceDto> profileServiceDtoList, Long vendorId, String name){
         ProfileServiceDto filteredService = profileServiceDtoList
                 .stream()
                 .filter(profileServiceDto -> profileServiceDto.getServiceCategoryId().equals(vendorId))
                 .findFirst()
-                .orElseThrow(() -> new VendorServiceUnavailableException("we could not find ocr service in your profile, please check your terminal profile"));
+                .orElseThrow(() -> new VendorServiceUnavailableException("we could not find "+name+" service in your profile, please check your terminal profile"));
         return vendorServiceRepository.findById(filteredService.getVendorServiceId()).orElseThrow().getVendor().getId();
     }
 }
