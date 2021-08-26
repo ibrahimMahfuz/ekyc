@@ -43,11 +43,11 @@ public class EkycSwitcherImpl implements EkycSwitcher{
 
 
     private Long getType(List<ProfileServiceDto> profileServiceDtoList, Long vendorId){
-        ProfileServiceDto service_not_registerd = profileServiceDtoList
+        ProfileServiceDto filteredService = profileServiceDtoList
                 .stream()
                 .filter(profileServiceDto -> profileServiceDto.getServiceCategoryId().equals(vendorId))
                 .findFirst()
                 .orElseThrow(() -> new VendorServiceUnavailableException("we could not find ocr service in your profile, please check your terminal profile"));
-        return vendorServiceRepository.findById(service_not_registerd.getVendorServiceId()).orElseThrow().getVendor().getId();
+        return vendorServiceRepository.findById(filteredService.getVendorServiceId()).orElseThrow().getVendor().getId();
     }
 }
