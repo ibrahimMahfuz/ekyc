@@ -2,6 +2,7 @@ package id.co.pcsindonesia.ia.ekyc.service.command.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.co.pcsindonesia.ia.ekyc.dto.command.ExtraTaxCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiExtraTaxCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiExtraTaxDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiGlobalDto;
@@ -16,6 +17,9 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
+
 @Service
 public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
@@ -29,10 +33,23 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
     }
 
     @Override
-    public AsliRiGlobalDto<AsliRiExtraTaxDto> extraTaxVerification(AsliRiExtraTaxCommandDto asliRiExtraTaxCommandDto) throws JsonProcessingException {
+    public AsliRiGlobalDto<AsliRiExtraTaxDto> extraTaxVerification(ExtraTaxCommandDto extraTaxCommandDto) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("token", asliRiProperty.getToken());
+
+        String trxId = UUID.randomUUID().toString().replace("-","x");
+
+        AsliRiExtraTaxCommandDto asliRiExtraTaxCommandDto = AsliRiExtraTaxCommandDto
+                .builder()
+                .trxId(trxId)
+                .nik(extraTaxCommandDto.getNik())
+                .npwp(extraTaxCommandDto.getNpwp())
+                .income(extraTaxCommandDto.getIncome())
+                .name(extraTaxCommandDto.getName())
+                .birthdate(extraTaxCommandDto.getBirthdate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")))
+                .birthplace(extraTaxCommandDto.getBirthplace())
+                .build();
 
         ObjectMapper objectMapper = new ObjectMapper();
         String bodyString = objectMapper.writeValueAsString(asliRiExtraTaxCommandDto);

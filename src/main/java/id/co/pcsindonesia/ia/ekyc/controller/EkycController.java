@@ -1,10 +1,7 @@
 package id.co.pcsindonesia.ia.ekyc.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import id.co.pcsindonesia.ia.ekyc.dto.command.LnFmCommandDto;
-import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
-import id.co.pcsindonesia.ia.ekyc.dto.command.ProfileCommadDto;
-import id.co.pcsindonesia.ia.ekyc.dto.command.UserCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.*;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiExtraTaxCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.vida.VidaDemogCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.*;
@@ -182,7 +179,7 @@ public class EkycController {
 
     @Operation(summary = "Extra Tax", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/extra-taxes")
-    public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> livenessAndFaceMatch(@Valid @RequestBody AsliRiExtraTaxCommandDto body) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> livenessAndFaceMatch(@Valid @RequestBody ExtraTaxCommandDto body) throws JsonProcessingException, InterruptedException {
         AsliRiGlobalDto<AsliRiExtraTaxDto> asliRiExtraTaxDtoAsliRiGlobalDto = ekycAsliRiCommandService.extraTaxVerification(body);
         return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiExtraTaxDto>>builder()
                 .code(HttpStatus.OK.value())
