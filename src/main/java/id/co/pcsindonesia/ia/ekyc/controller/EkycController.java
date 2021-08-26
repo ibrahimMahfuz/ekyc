@@ -135,6 +135,24 @@ public class EkycController {
         }
     }
 
+    @Operation(summary = "Demog Only", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/demog")
+    public ResponseEntity<GlobalDto<Boolean>> demog(@Valid @RequestBody VidaDemogCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+        List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
+        if (ekycSwitcher.getDemogType(service).equals(ekycVendorProperty.getVida())){
+            VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.demogLite(body);
+            VidaStatusDto<VidaDemogDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaDemogDto.class);
+            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(status.getData().getResult().getMatch())
+                    .build(), HttpStatus.OK);
+        }else {
+            ekycAsliRiCommandService.ocr(null);
+            return null;
+        }
+    }
+
     @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/register/form")
     public ResponseEntity<GlobalDto<UserDto>> registerForm(@Valid @RequestBody UserCommandDto userCommandDto) throws JsonProcessingException, InterruptedException {

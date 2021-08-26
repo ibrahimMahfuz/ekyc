@@ -7,4 +7,5 @@ import java.util.List;
 public interface EkycSwitcher {
     public List<ProfileServiceDto> getService(String token);
     public Long getOcrType(List<ProfileServiceDto> profileServiceDtoList);
+    public Long getDemogType(List<ProfileServiceDto> profileServiceDtoList);
 }
