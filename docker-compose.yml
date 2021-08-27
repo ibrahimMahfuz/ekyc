@@ -9,6 +9,8 @@ services:
       - 8300:8300
     networks:
       - laradock_backend
+    volumes:
+      - ${LOG_DIR}:/log
     environment:
       DB_HOST: ${DB_HOST}
       DB_USERNAME: ${DB_USERNAME}
