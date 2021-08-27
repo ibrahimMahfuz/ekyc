@@ -2,6 +2,7 @@ package id.co.pcsindonesia.ia.ekyc.service.command.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import id.co.pcsindonesia.ia.ekyc.dto.command.DemogCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.LnFmCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.vida.*;
@@ -18,6 +19,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 @Service
@@ -46,7 +48,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
         ResponseEntity<VidaGlobalDto<VidaTransactionDto>> response = restTemplate.exchange(
-                vidaProperty.getOcrUlr(),
+                vidaProperty.getOcrUrl(),
                 HttpMethod.POST,
                 request,
                 ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaTransactionDto.class).getType())
@@ -64,13 +66,15 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        Double threshold = (param.getThreshold() == null)? vidaProperty.getFaceThreshold() : (param.getThreshold()/10);
+
         VidaFmCommandDto vidaCidCommandDto = VidaFmCommandDto.builder()
                 .nik(param.getNik())
                 .phoneNo(param.getPhoneNo())
                 .email(param.getEmail())
                 .faceImage(param.getFaceImage())
                 .build();
-        VidaAnotherGlobalCommandDto<VidaFmCommandDto> body = new VidaAnotherGlobalCommandDto<>(vidaProperty.getFaceThreshold(), vidaCidCommandDto);
+        VidaAnotherGlobalCommandDto<VidaFmCommandDto> body = new VidaAnotherGlobalCommandDto<>(threshold, vidaCidCommandDto);
         ObjectMapper objectMapper = new ObjectMapper();
         String bodyString = objectMapper.writeValueAsString(body);
 
@@ -83,12 +87,6 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         );
         return response.getBody();
     }
-
-    @Override
-    public VidaFmHandlerDto completeIdHandler(VidaStatusDto<VidaFaceMatchDto> param) {
-        return new VidaFmHandlerDto(param.getData().getResult().getMatch());
-    }
-
 
     @Override
     public <T> VidaStatusDto<T> getStatus(String tid, Class<T> responseClass) throws InterruptedException {
@@ -119,15 +117,25 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
     }
 
     @Override
-    public VidaGlobalDto<VidaTransactionDto> demogLite(VidaDemogCommandDto vidaDemogCommandDto) throws JsonProcessingException {
+    public VidaGlobalDto<VidaTransactionDto> demog(DemogCommandDto demogCommandDto) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Double threshold = (demogCommandDto.getThreshold() == null)? vidaProperty.getFaceThreshold() : (demogCommandDto.getThreshold()/10);
+
+        VidaDemogCommandDto vidaDemogCommandDto = VidaDemogCommandDto.builder()
+                .nik(demogCommandDto.getNik())
+                .fullName(demogCommandDto.getFullName())
+                .dob(demogCommandDto.getDob().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                .phoneNo(demogCommandDto.getPhoneNo())
+                .email(demogCommandDto.getEmail())
+                .build();
 
         if (vidaDemogCommandDto.getEmail() == null) vidaDemogCommandDto.setEmail("nullEmail@emai.com");
         if (vidaDemogCommandDto.getPhoneNo() == null ) vidaDemogCommandDto.setPhoneNo("081234567809");
 
         ObjectMapper objectMapper = new ObjectMapper();
-        VidaAnotherGlobalCommandDto<VidaDemogCommandDto> body = new VidaAnotherGlobalCommandDto<>(vidaProperty.getDemogThreshold(), vidaDemogCommandDto);
+        VidaAnotherGlobalCommandDto<VidaDemogCommandDto> body = new VidaAnotherGlobalCommandDto<>(threshold, vidaDemogCommandDto);
         String bodyString = objectMapper.writeValueAsString(body);
 
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);

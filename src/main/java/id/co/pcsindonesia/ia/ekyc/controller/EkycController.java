@@ -7,13 +7,17 @@ import id.co.pcsindonesia.ia.ekyc.dto.command.vida.VidaDemogCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.*;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiExtraTaxDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiGlobalDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiOcrDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 import id.co.pcsindonesia.ia.ekyc.entity.User;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycAsliRiCommandService;
+import id.co.pcsindonesia.ia.ekyc.service.command.EkycSimulationCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.UserCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.query.ProfileQueryService;
+import id.co.pcsindonesia.ia.ekyc.service.query.UserQueryService;
 import id.co.pcsindonesia.ia.ekyc.switcher.EkycSwitcher;
+import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServerException;
 import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServiceUnavailableException;
 import id.co.pcsindonesia.ia.ekyc.util.properties.EkycVendorProperty;
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,9 +42,14 @@ import java.util.List;
 public class EkycController {
 
     private final ProfileQueryService profileQueryService;
+
     private final EkycVidaCommandService ekycVidaCommandService;
     private final EkycAsliRiCommandService ekycAsliRiCommandService;
+    private final EkycSimulationCommandService ekycSimulationCommandService;
+
     private final UserCommandService userCommandService;
+    private final UserQueryService userQueryService;
+
     private final EkycSwitcher ekycSwitcher;
     private final EkycVendorProperty ekycVendorProperty;
 
@@ -57,19 +66,19 @@ public class EkycController {
                 .pob(orCreate.getPob())
                 .verified(orCreate.getVerified())
                 .build();
-        if (!getOrCreateUserDto.getIsGet()){
-            VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.demogLite(VidaDemogCommandDto.builder()
+        if (!getOrCreateUserDto.getIsGet()) {
+            VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.demog(DemogCommandDto.builder()
                     .nik(orCreate.getNik())
                     .fullName(orCreate.getName())
-                    .dob(orCreate.getDob().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")))
+                    .dob(orCreate.getDob())
                     .phoneNo(orCreate.getPhoneNumber())
                     .email(orCreate.getEmail())
                     .build());
             VidaStatusDto<VidaDemogDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaDemogDto.class);
-            if (!status.getData().getResult().getMatch()){
+            if (!status.getData().getResult().getMatch()) {
                 userQueryDto.setVerified(false);
                 orCreate.setVerified(false);
-            }else {
+            } else {
                 userQueryDto.setVerified(true);
                 orCreate.setVerified(true);
             }
@@ -82,8 +91,9 @@ public class EkycController {
                 .build(), HttpStatus.OK);
     }
 
+    @Operation(summary = "Get token and profile")
     @PostMapping("/profiles")
-    public ResponseEntity<GlobalDto<ProfileDto>> getProfiles(@RequestBody ProfileCommadDto body){
+    public ResponseEntity<GlobalDto<ProfileDto>> profile(@RequestBody ProfileCommadDto body) {
         ProfileDto profileByTerminalId = profileQueryService.getProfileByTerminalId(body.getTerminalId());
         return new ResponseEntity<>(GlobalDto.<ProfileDto>builder()
                 .code(HttpStatus.OK.value())
@@ -92,11 +102,11 @@ public class EkycController {
                 .build(), HttpStatus.OK);
     }
 
-    @Operation(summary = "Register by OCR", security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/register/ocr")
-    public ResponseEntity<GlobalDto<UserDto>> registerOcr(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+    @Operation(summary = "OCR KTP and validate demog at once", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/composition/ocr-and-demogs")
+    public ResponseEntity<GlobalDto<UserDto>> ocrAndDemog(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
-        if (ekycSwitcher.getOcrType(service).equals(ekycVendorProperty.getVida())){
+        if (ekycSwitcher.getOcrType(service).equals(ekycVendorProperty.getVida())) {
             VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
             VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
             LocalDate ldate = LocalDate.parse(status.getData().getResult().getTanggalLahir(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
@@ -108,17 +118,18 @@ public class EkycController {
                     .verified(true)
                     .build();
             return getGlobalDtoResponseEntity(user);
-        }else {
+        } else {
             ekycAsliRiCommandService.ocr(null);
             return null;
         }
     }
 
-    @Operation(summary = "OCR Only", security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/ocr")
+    @Operation(summary = "OCR KTP", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/ocrs")
     public ResponseEntity<GlobalDto<VidaStatusOcrDto>> ocr(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
-        if (ekycSwitcher.getOcrType(service).equals(ekycVendorProperty.getVida())){
+        Long ocrType = ekycSwitcher.getOcrType(service);
+        if (ocrType.equals(ekycVendorProperty.getVida())) {
             VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
             VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
             return new ResponseEntity<>(GlobalDto.<VidaStatusOcrDto>builder()
@@ -126,33 +137,78 @@ public class EkycController {
                     .message(HttpStatus.OK.getReasonPhrase())
                     .result(status.getData().getResult())
                     .build(), HttpStatus.OK);
-        }else {
-            ekycAsliRiCommandService.ocr(null);
-            return null;
+        } else if (ocrType.equals(ekycVendorProperty.getAsliRi())) {
+            AsliRiOcrDto ocr = ekycAsliRiCommandService.ocr(body);
+            VidaStatusOcrDto ocrDto = VidaStatusOcrDto
+                    .builder()
+                    .nik(Long.parseLong(ocr.getNik()))
+                    .provinsi(ocr.getProvinsi())
+                    .kabupatenKota(ocr.getKota())
+                    .golonganDarah(ocr.getGolDarah())
+                    .agama(ocr.getAgama())
+                    .alamat(ocr.getAlamat())
+                    .berlakuHingga("SEUMUR HIDUP")
+                    .kewarganegaraan(ocr.getKewarganegaraan())
+                    .nama(ocr.getNama())
+                    .pekerjaan(ocr.getPekerjaan())
+                    .tempatLahir(ocr.getTempatLahir())
+                    .kecamatan(ocr.getKecamatan())
+                    .jenisKelamin(ocr.getJenisKelamin())
+                    .rtRw(ocr.getRtRw())
+                    .tanggalLahir(ocr.getTanggalLahir())
+                    .statusPerkawinan(ocr.getStatusPerkawinan())
+                    .kelurahanDesa(ocr.getKelurahanDesa())
+                    .build();
+            return new ResponseEntity<>(GlobalDto.<VidaStatusOcrDto>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(ocrDto)
+                    .build(), HttpStatus.OK);
+        } else {
+            throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
         }
     }
 
-    @Operation(summary = "Demog Only", security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/demog")
-    public ResponseEntity<GlobalDto<Boolean>> demog(@Valid @RequestBody VidaDemogCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+    @Operation(summary = "Demog validation", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/demogs")
+    public ResponseEntity<GlobalDto<Boolean>> demog(@Valid @RequestBody DemogCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
-        if (ekycSwitcher.getDemogType(service).equals(ekycVendorProperty.getVida())){
-            VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.demogLite(body);
-            VidaStatusDto<VidaDemogDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaDemogDto.class);
+        Long demogType = ekycSwitcher.getDemogType(service);
+        Boolean nikVerified = userQueryService.isNikVerified(body.getNik());
+        if (!nikVerified){
+            if (demogType.equals(ekycVendorProperty.getVida())) {
+                VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.demog(body);
+                VidaStatusDto<VidaDemogDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaDemogDto.class);
+                return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                        .code(HttpStatus.OK.value())
+                        .message(HttpStatus.OK.getReasonPhrase())
+                        .result(status.getData().getResult().getMatch())
+                        .build(), HttpStatus.OK);
+            } else if (demogType.equals(ekycVendorProperty.getAsliRi())) {
+                ekycAsliRiCommandService.ocr(null);
+                return null;
+            } else if (demogType.equals(ekycVendorProperty.getSimulation())) {
+                Boolean demog = ekycSimulationCommandService.demog(null);
+                return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                        .code(HttpStatus.OK.value())
+                        .message(HttpStatus.OK.getReasonPhrase())
+                        .result(demog)
+                        .build(), HttpStatus.OK);
+            } else {
+                throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
+            }
+        }else {
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
-                    .result(status.getData().getResult().getMatch())
+                    .result(nikVerified)
                     .build(), HttpStatus.OK);
-        }else {
-            ekycAsliRiCommandService.ocr(null);
-            return null;
         }
     }
 
-    @Operation(summary = "Register by Form", security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/register/form")
-    public ResponseEntity<GlobalDto<UserDto>> registerForm(@Valid @RequestBody UserCommandDto userCommandDto) throws JsonProcessingException, InterruptedException {
+    @Operation(summary = "Register by form and validate demog", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/form-and-demogs")
+    public ResponseEntity<GlobalDto<UserDto>> formAndDemog(@Valid @RequestBody UserCommandDto userCommandDto) throws JsonProcessingException, InterruptedException {
         User user = User.builder()
                 .nik(userCommandDto.getNik())
                 .name(userCommandDto.getName())
@@ -163,23 +219,42 @@ public class EkycController {
         return getGlobalDtoResponseEntity(user);
     }
 
-    @Operation(summary = "Liveness and facematch", security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/compositions/liveness-and-facematch")
-    public ResponseEntity<GlobalDto<VidaFmHandlerDto>> livenessAndFaceMatch(@Valid @RequestBody LnFmCommandDto body) throws JsonProcessingException, InterruptedException {
-        // -- skip -- ekycVidaCommandService.liveness(body);
-        VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
-        VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
-        VidaFmHandlerDto vidaFmHandlerDto = ekycVidaCommandService.completeIdHandler(status);
-        return new ResponseEntity<>(GlobalDto.<VidaFmHandlerDto>builder()
-                .code(HttpStatus.OK.value())
-                .message(HttpStatus.OK.getReasonPhrase())
-                .result(vidaFmHandlerDto)
-                .build(), HttpStatus.OK);
+    @Operation(summary = "Liveness and validate face at once", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/composition/liveness-and-facematches")
+    public ResponseEntity<GlobalDto<Boolean>> livenessAndFaceMatch(@Valid @RequestBody LnFmCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+        List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
+        Long facematchType = ekycSwitcher.getFacematchType(service);
+        if (facematchType.equals(ekycVendorProperty.getVida())){
+            // -- skip -- ekycVidaCommandService.liveness(body);
+            VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
+            VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
+            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(status.getData().getResult().getMatch())
+                    .build(), HttpStatus.OK);
+        }else if (facematchType.equals(ekycVendorProperty.getAsliRi())){
+            Boolean faceMatch = ekycAsliRiCommandService.faceMatch(body);
+            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(faceMatch)
+                    .build(), HttpStatus.OK);
+        }else if (facematchType.equals(ekycVendorProperty.getSimulation())){
+            Boolean faceMatch = ekycSimulationCommandService.faceMatch(null);
+            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(faceMatch)
+                    .build(), HttpStatus.OK);
+        }else {
+            throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
+        }
     }
 
-    @Operation(summary = "Extra Tax", security = @SecurityRequirement(name = "bearerAuth"))
-    @PostMapping("/extra-taxes")
-    public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> livenessAndFaceMatch(@Valid @RequestBody ExtraTaxCommandDto body) throws JsonProcessingException, InterruptedException {
+    @Operation(summary = "Inclome validation", security = @SecurityRequirement(name = "bearerAuth"))
+    @PostMapping("/incomes")
+    public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> income(@Valid @RequestBody ExtraTaxCommandDto body) throws JsonProcessingException, InterruptedException {
         AsliRiGlobalDto<AsliRiExtraTaxDto> asliRiExtraTaxDtoAsliRiGlobalDto = ekycAsliRiCommandService.extraTaxVerification(body);
         return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiExtraTaxDto>>builder()
                 .code(HttpStatus.OK.value())
@@ -187,5 +262,4 @@ public class EkycController {
                 .result(asliRiExtraTaxDtoAsliRiGlobalDto)
                 .build(), HttpStatus.OK);
     }
-
 }

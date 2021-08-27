@@ -9,4 +9,5 @@ public class EkycVendorProperty {
     private Long vida;
     private Long vj;
     private Long asliRi;
+    private Long simulation;
 }

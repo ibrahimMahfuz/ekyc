@@ -37,8 +37,18 @@ public class EkycSwitcherImpl implements EkycSwitcher{
     }
 
     @Override
+    public Long livenessType(List<ProfileServiceDto> profileServiceDtoList) {
+        return getType(profileServiceDtoList, ekycServiceCategoryProperty.getLiveness(), "LIVENESS");
+    }
+
+    @Override
     public Long getDemogType(List<ProfileServiceDto> profileServiceDtoList) {
         return getType(profileServiceDtoList, ekycServiceCategoryProperty.getDemog(), "DEMOG");
+    }
+
+    @Override
+    public Long getFacematchType(List<ProfileServiceDto> profileServiceDtoList) {
+        return getType(profileServiceDtoList, ekycServiceCategoryProperty.getFaceMatch(), "FACE MATCH");
     }
 
 

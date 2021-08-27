@@ -20,6 +20,8 @@ logging:
         http: debug
     httpclient:
       wire: debug
+  file:
+    path: ./log
 vida:
   oauth2:
     client:
@@ -29,21 +31,28 @@ vida:
       accessTokenUri: https://${VIDA_OAUTH2_URL:qa-sso.vida.id/auth/realms/vida/protocol/openid-connect/token}
       scope: ${VIDA_OAUTH2_SCOPE:roles}
   properties:
-    ocrUlr: https://${VIDA_OCR_URL:services-sandbox.vida.id/verify/v1/ktp/ocr}
-    statusTransactionUrl: https://${VIDA_TRANSACTION_STATUS_URL:services-sandbox.vida.id/verify/v1/transaction/}
+    ocrUrl: https://${VIDA_OCR_URL:services-sandbox.vida.id/verify/v1/ktp/ocr}
+    livenessUrl: https://${VIDA_LIVENESS_URL:none}
     faceMatchUrl: https://${VIDA_FACEMATCH_URL:services-sandbox.vida.id/verify/v1/face/match}
     demogLiteUrl: https://${VIDA_DEMOG_LITE_URL:services-sandbox.vida.id/verify/v1/demog-lite}
+    statusTransactionUrl: https://${VIDA_TRANSACTION_STATUS_URL:services-sandbox.vida.id/verify/v1/transaction/}
     faceThreshold: ${VIDA_FACE_THRESHOLD:3.0}
     demogThreshold: ${VIDA_DEMOG_THRESHOLD:1.0}
 asliri:
   properties:
+    ocrUrl: https://${ASLIRI_OCR_URL:api.asliri.id:8443/pcs_poc/ocr_extra}
+    livenessUrl: https://${ASLIRI_LIVENESS_URL:none}
+    faceMatchUrl: https://${ASLIRI_FACEMATCH_URL:api.asliri.id:8443/pcs_poc/verify_profesional}
+    demogUrl: https://${ASLIRI_DEMOG_URL:api.asliri.id:8443/pcs_poc/verify_basic}
     extraTaxUrl: https://${ASLIRI_EXTRA_TAX_URL:api.asliri.id:8443/pcs_poc/verify_tax_extra}
+    faceThreshold: ${ASLIRI_FACE_THRESHOLD:7.0}
     token: ${ASLIRI_TOKEN:OWIwNmFjOGYtYzZiOC00NGI1LTkwNzEtZWQ1OWVlZDk0YTRm}
 ekyc:
   vendor:
     vida: ${EKYC_VENDOR_VIDA:1}
     vj: ${EKYC_VENDOR_VJ:2}
     asliRi: ${EKYC_VENDOR_ASLIRI:3}
+    simulation: ${EKYC_VENDOR_SIMULATION:999}
   service:
     ocr: ${EKYC_SERVICE_OCR:1}
     liveness: ${EKYC_SERVICE_LIVENESS:2}
