@@ -109,7 +109,9 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                         ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaStatusDto.class, responseClass).getType())
                 );
         VidaStatusDto<K> body = response.getBody();
-        log.debug("get status ke "+loop+" by url of "+url);
+        log.trace("ini trace get status ke "+loop+" by url of "+url);
+        log.info("ini info get status ke "+loop+" by url of "+url);
+        log.debug("ini debug get status ke "+loop+" by url of "+url);
         if (Objects.equals(body.getData().getStatus(), "success")){
             return body;
         } else if (loop == 3){
