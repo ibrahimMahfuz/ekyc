@@ -32,7 +32,7 @@ public class EkycSwitcherImpl implements EkycSwitcher{
     }
 
     @Override
-    public Long getOcrType(List<ProfileServiceDto> profileServiceDtoList) {
+    public Long ocrType(List<ProfileServiceDto> profileServiceDtoList) {
         return getType(profileServiceDtoList, ekycServiceCategoryProperty.getOcr(), "OCR");
     }
 
@@ -42,13 +42,18 @@ public class EkycSwitcherImpl implements EkycSwitcher{
     }
 
     @Override
-    public Long getDemogType(List<ProfileServiceDto> profileServiceDtoList) {
+    public Long demogType(List<ProfileServiceDto> profileServiceDtoList) {
         return getType(profileServiceDtoList, ekycServiceCategoryProperty.getDemog(), "DEMOG");
     }
 
     @Override
-    public Long getFacematchType(List<ProfileServiceDto> profileServiceDtoList) {
+    public Long facematchType(List<ProfileServiceDto> profileServiceDtoList) {
         return getType(profileServiceDtoList, ekycServiceCategoryProperty.getFaceMatch(), "FACE MATCH");
+    }
+
+    @Override
+    public Long incomeType(List<ProfileServiceDto> profileServiceDtoList) {
+        return getType(profileServiceDtoList, ekycServiceCategoryProperty.getExtraTax(), "INCOME");
     }
 
 

@@ -2,8 +2,6 @@ package id.co.pcsindonesia.ia.ekyc.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import id.co.pcsindonesia.ia.ekyc.dto.command.*;
-import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiExtraTaxCommandDto;
-import id.co.pcsindonesia.ia.ekyc.dto.command.vida.VidaDemogCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.*;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiExtraTaxDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiGlobalDto;
@@ -17,7 +15,6 @@ import id.co.pcsindonesia.ia.ekyc.service.command.UserCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.query.ProfileQueryService;
 import id.co.pcsindonesia.ia.ekyc.service.query.UserQueryService;
 import id.co.pcsindonesia.ia.ekyc.switcher.EkycSwitcher;
-import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServerException;
 import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServiceUnavailableException;
 import id.co.pcsindonesia.ia.ekyc.util.properties.EkycVendorProperty;
 import io.swagger.v3.oas.annotations.Operation;
@@ -106,7 +103,7 @@ public class EkycController {
     @PostMapping("/composition/ocr-and-demogs")
     public ResponseEntity<GlobalDto<UserDto>> ocrAndDemog(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
-        if (ekycSwitcher.getOcrType(service).equals(ekycVendorProperty.getVida())) {
+        if (ekycSwitcher.ocrType(service).equals(ekycVendorProperty.getVida())) {
             VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
             VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
             LocalDate ldate = LocalDate.parse(status.getData().getResult().getTanggalLahir(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
@@ -128,7 +125,7 @@ public class EkycController {
     @PostMapping("/ocrs")
     public ResponseEntity<GlobalDto<VidaStatusOcrDto>> ocr(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
-        Long ocrType = ekycSwitcher.getOcrType(service);
+        Long ocrType = ekycSwitcher.ocrType(service);
         if (ocrType.equals(ekycVendorProperty.getVida())) {
             VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
             VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
@@ -173,7 +170,7 @@ public class EkycController {
     @PostMapping("/demogs")
     public ResponseEntity<GlobalDto<Boolean>> demog(@Valid @RequestBody DemogCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
-        Long demogType = ekycSwitcher.getDemogType(service);
+        Long demogType = ekycSwitcher.demogType(service);
         Boolean nikVerified = userQueryService.isNikVerified(body.getNik());
         if (!nikVerified){
             if (demogType.equals(ekycVendorProperty.getVida())) {
@@ -223,7 +220,7 @@ public class EkycController {
     @PostMapping("/composition/liveness-and-facematches")
     public ResponseEntity<GlobalDto<Boolean>> livenessAndFaceMatch(@Valid @RequestBody LnFmCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
-        Long facematchType = ekycSwitcher.getFacematchType(service);
+        Long facematchType = ekycSwitcher.facematchType(service);
         if (facematchType.equals(ekycVendorProperty.getVida())){
             // -- skip -- ekycVidaCommandService.liveness(body);
             VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
@@ -254,12 +251,25 @@ public class EkycController {
 
     @Operation(summary = "Inclome validation", security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping("/incomes")
-    public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> income(@Valid @RequestBody ExtraTaxCommandDto body) throws JsonProcessingException, InterruptedException {
-        AsliRiGlobalDto<AsliRiExtraTaxDto> asliRiExtraTaxDtoAsliRiGlobalDto = ekycAsliRiCommandService.extraTaxVerification(body);
-        return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiExtraTaxDto>>builder()
-                .code(HttpStatus.OK.value())
-                .message(HttpStatus.OK.getReasonPhrase())
-                .result(asliRiExtraTaxDtoAsliRiGlobalDto)
-                .build(), HttpStatus.OK);
+    public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> income(@Valid @RequestBody ExtraTaxCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+        List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
+        Long incomeType = ekycSwitcher.incomeType(service);
+        if (incomeType.equals(ekycVendorProperty.getAsliRi())){
+            AsliRiGlobalDto<AsliRiExtraTaxDto> asliRiExtraTaxDtoAsliRiGlobalDto = ekycAsliRiCommandService.extraTaxVerification(body);
+            return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiExtraTaxDto>>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(asliRiExtraTaxDtoAsliRiGlobalDto)
+                    .build(), HttpStatus.OK);
+        }else if (incomeType.equals(ekycVendorProperty.getSimulation())){
+            AsliRiGlobalDto<AsliRiExtraTaxDto> asliRiExtraTaxDtoAsliRiGlobalDto = ekycSimulationCommandService.extraTaxVerification();
+            return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiExtraTaxDto>>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(asliRiExtraTaxDtoAsliRiGlobalDto)
+                    .build(), HttpStatus.OK);
+        }else {
+            throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
+        }
     }
 }

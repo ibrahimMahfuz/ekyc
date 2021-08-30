@@ -39,7 +39,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> ocr(OcrCommandDto param) throws JsonProcessingException {
-
+        log.info("access service vida get OCR");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -65,6 +65,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> faceMatch(LnFmCommandDto param) throws JsonProcessingException {
+        log.info("access service vida get face match");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -92,6 +93,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     @Override
     public <T> VidaStatusDto<T> getStatus(String tid, Class<T> responseClass) throws InterruptedException {
+        log.info("access service vida get status");
         final String FULL_URL = vidaProperty.getStatusTransactionUrl() + tid;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -109,7 +111,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                         ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaStatusDto.class, responseClass).getType())
                 );
         VidaStatusDto<K> body = response.getBody();
-        log.info("ini info get status ke "+loop+" by url of "+url);
+        log.info("get status number: "+loop+" by url of "+url);
         if (Objects.equals(body.getData().getStatus(), "success")){
             return body;
         } else if (loop == 3){
@@ -121,6 +123,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> demog(DemogCommandDto demogCommandDto) throws JsonProcessingException {
+        log.info("access service vida get demog");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -150,6 +153,4 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         );
         return response.getBody();
     }
-
-
 }

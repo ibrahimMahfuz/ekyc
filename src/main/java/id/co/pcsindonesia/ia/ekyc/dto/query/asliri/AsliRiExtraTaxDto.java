@@ -14,5 +14,4 @@ public class AsliRiExtraTaxDto {
     private String name;
     private String birthdate;
     private String birthplace;
-    private String message;
 }

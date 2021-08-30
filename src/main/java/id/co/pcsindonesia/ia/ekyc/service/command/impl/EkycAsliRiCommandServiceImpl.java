@@ -15,6 +15,7 @@ import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiProfessionalVerDto;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycAsliRiCommandService;
 import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServiceUnavailableException;
 import id.co.pcsindonesia.ia.ekyc.util.properties.AsliRiProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -28,6 +29,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
     private final RestTemplate restTemplate;
@@ -41,6 +43,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
     @Override
     public AsliRiGlobalDto<AsliRiExtraTaxDto> extraTaxVerification(ExtraTaxCommandDto extraTaxCommandDto) throws JsonProcessingException {
+        log.info("access service asliri get extra tax");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("token", asliRiProperty.getToken());
@@ -73,6 +76,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
     @Override
     public AsliRiOcrDto ocr(OcrCommandDto param) throws JsonProcessingException {
+        log.info("access service asliri get ocr");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("token", asliRiProperty.getToken());
@@ -106,6 +110,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
     @Override
     public Boolean faceMatch(LnFmCommandDto param) throws JsonProcessingException {
+        log.info("access service asliri get facematch");
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("token", asliRiProperty.getToken());
