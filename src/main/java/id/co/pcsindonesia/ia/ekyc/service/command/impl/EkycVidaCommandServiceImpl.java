@@ -96,7 +96,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>("", headers);
-        return sendGetStatus(FULL_URL, entity, responseClass, 1);
+        return sendGetStatus(FULL_URL, entity, responseClass, 2);
     }
 
     private <K> VidaStatusDto<K> sendGetStatus(String url, HttpEntity<String> entity, Class<K> responseClass, Integer loop) throws InterruptedException {
@@ -109,9 +109,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                         ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaStatusDto.class, responseClass).getType())
                 );
         VidaStatusDto<K> body = response.getBody();
-        log.trace("ini trace get status ke "+loop+" by url of "+url);
         log.info("ini info get status ke "+loop+" by url of "+url);
-        log.debug("ini debug get status ke "+loop+" by url of "+url);
         if (Objects.equals(body.getData().getStatus(), "success")){
             return body;
         } else if (loop == 3){
