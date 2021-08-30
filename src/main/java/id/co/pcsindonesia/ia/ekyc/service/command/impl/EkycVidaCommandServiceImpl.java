@@ -11,6 +11,7 @@ import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
 import id.co.pcsindonesia.ia.ekyc.util.exception.RequestTimeOutException;
 import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServerException;
 import id.co.pcsindonesia.ia.ekyc.util.properties.VidaProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -23,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 @Service
+@Slf4j
 public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     private final RestTemplate restTemplate;
@@ -107,6 +109,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                         ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaStatusDto.class, responseClass).getType())
                 );
         VidaStatusDto<K> body = response.getBody();
+        log.debug("get status ke "+loop+" by url of "+url);
         if (Objects.equals(body.getData().getStatus(), "success")){
             return body;
         } else if (loop == 3){
