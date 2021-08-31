@@ -5,13 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import id.co.pcsindonesia.ia.ekyc.dto.command.ExtraTaxCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.LnFmCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.OcrCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.PhoneCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiExtraTaxCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiOcrCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiPhoneCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiProfessionalVerCommandDto;
-import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiExtraTaxDto;
-import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiGlobalDto;
-import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiOcrDto;
-import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiProfessionalVerDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.*;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycAsliRiCommandService;
 import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServiceUnavailableException;
 import id.co.pcsindonesia.ia.ekyc.util.properties.AsliRiProperty;
@@ -70,6 +69,40 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
                 HttpMethod.POST,
                 request,
                 ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(AsliRiGlobalDto.class, AsliRiExtraTaxDto.class).getType())
+        );
+        return response.getBody();
+    }
+
+    @Override
+    public AsliRiGlobalDto<AsliRiPhoneDto> phoneVerification(PhoneCommandDto phoneCommandDto) throws JsonProcessingException {
+        log.info("access service asliri get phone");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("token", asliRiProperty.getToken());
+
+        String trxId = UUID.randomUUID().toString().replace("-","x");
+        String phone = phoneCommandDto.getPhoneNumber();
+
+        if (phone.startsWith("0")){
+            phone = "+62"+phone.substring(1);
+        }else if (!phone.startsWith("+")){
+            phone = "+62"+phone;
+        }
+
+        AsliRiPhoneCommandDto asliRiPhoneCommandDto = AsliRiPhoneCommandDto.builder()
+                .trxId(trxId)
+                .nik(String.valueOf(phoneCommandDto.getNik()))
+                .phone(phone)
+                .build();
+        ObjectMapper objectMapper = new ObjectMapper();
+        String bodyString = objectMapper.writeValueAsString(asliRiPhoneCommandDto);
+
+        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
+        ResponseEntity<AsliRiGlobalDto<AsliRiPhoneDto>> response = restTemplate.exchange(
+                asliRiProperty.getPhoneUrl(),
+                HttpMethod.POST,
+                request,
+                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(AsliRiGlobalDto.class, AsliRiPhoneDto.class).getType())
         );
         return response.getBody();
     }

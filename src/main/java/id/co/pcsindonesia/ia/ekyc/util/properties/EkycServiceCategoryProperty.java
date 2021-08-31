@@ -11,5 +11,6 @@ public class EkycServiceCategoryProperty {
     private Long faceMatch;
     private Long demog;
     private Long extraTax;
+    private Long phone;
 
 }

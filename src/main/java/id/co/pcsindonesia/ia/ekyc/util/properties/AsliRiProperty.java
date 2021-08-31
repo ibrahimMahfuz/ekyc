@@ -11,6 +11,7 @@ public class AsliRiProperty {
     private String faceMatchUrl;
     private String demogUrl;
     private String extraTaxUrl;
+    private String phoneUrl;
     private Double faceThreshold;
     private String token;
 }

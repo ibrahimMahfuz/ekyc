@@ -56,6 +56,11 @@ public class EkycSwitcherImpl implements EkycSwitcher{
         return getType(profileServiceDtoList, ekycServiceCategoryProperty.getExtraTax(), "INCOME");
     }
 
+    @Override
+    public Long phoneType(List<ProfileServiceDto> profileServiceDtoList) {
+        return getType(profileServiceDtoList, ekycServiceCategoryProperty.getPhone(), "PHONE");
+    }
+
 
     private Long getType(List<ProfileServiceDto> profileServiceDtoList, Long vendorId, String name){
         ProfileServiceDto filteredService = profileServiceDtoList

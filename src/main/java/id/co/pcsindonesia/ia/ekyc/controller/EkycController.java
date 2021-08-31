@@ -6,6 +6,7 @@ import id.co.pcsindonesia.ia.ekyc.dto.query.*;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiExtraTaxDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiGlobalDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiOcrDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.AsliRiPhoneDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.vida.*;
 import id.co.pcsindonesia.ia.ekyc.entity.User;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycAsliRiCommandService;
@@ -265,6 +266,24 @@ public class EkycController {
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
                     .result(asliRiExtraTaxDtoAsliRiGlobalDto)
+                    .build(), HttpStatus.OK);
+        }else {
+            throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
+        }
+    }
+
+
+    @Operation(summary = "Phone validation", security = @SecurityRequirement(name = "apikey"))
+    @PostMapping("/phones")
+    public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiPhoneDto>>> phone(@Valid @RequestBody PhoneCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+        List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
+        Long phoneType = ekycSwitcher.phoneType(service);
+        if (phoneType.equals(ekycVendorProperty.getAsliRi())) {
+            AsliRiGlobalDto<AsliRiPhoneDto> asliRiPhoneDtoAsliRiGlobalDto = ekycAsliRiCommandService.phoneVerification(body);
+            return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiPhoneDto>>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(asliRiPhoneDtoAsliRiGlobalDto)
                     .build(), HttpStatus.OK);
         }else {
             throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");

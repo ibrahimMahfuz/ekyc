@@ -47,6 +47,7 @@ asliri:
     faceMatchUrl: https://${ASLIRI_FACEMATCH_URL:api.asliri.id:8443/pcs_poc/verify_profesional}
     demogUrl: https://${ASLIRI_DEMOG_URL:api.asliri.id:8443/pcs_poc/verify_basic}
     extraTaxUrl: https://${ASLIRI_EXTRA_TAX_URL:api.asliri.id:8443/pcs_poc/verify_tax_extra}
+    phoneUrl: https://${ASLIRI_PHONE_URL:api.asliri.id:8443/pcs_poc/verify_phone}
     faceThreshold: ${ASLIRI_FACE_THRESHOLD:7.0}
     token: ${ASLIRI_TOKEN:OWIwNmFjOGYtYzZiOC00NGI1LTkwNzEtZWQ1OWVlZDk0YTRm}
 ekyc:
@@ -61,3 +62,4 @@ ekyc:
     faceMatch: ${EKYC_SERVICE_FACEMATCH:3}
     demog: ${EKYC_SERVICE_DEMOG:4}
     extraTax: ${EKYC_SERVICE_EXTRA_TAX:5}
+    phone: ${EKYC_SERVICE_PHONE:6}

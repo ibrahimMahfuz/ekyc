@@ -11,4 +11,5 @@ public interface EkycSwitcher {
     public Long demogType(List<ProfileServiceDto> profileServiceDtoList);
     public Long facematchType(List<ProfileServiceDto> profileServiceDtoList);
     public Long incomeType(List<ProfileServiceDto> profileServiceDtoList);
+    public Long phoneType(List<ProfileServiceDto> profileServiceDtoList);
 }
