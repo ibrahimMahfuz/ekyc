@@ -97,7 +97,7 @@ public class EkycController {
                 .build(), HttpStatus.OK);
     }
 
-    @Operation(summary = "OCR KTP and validate demog at once", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "OCR KTP and validate demog at once", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/composition/ocr-and-demogs")
     public ResponseEntity<GlobalDto<UserDto>> ocrAndDemog(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
@@ -119,7 +119,7 @@ public class EkycController {
         }
     }
 
-    @Operation(summary = "OCR KTP", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "OCR KTP", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/ocrs")
     public ResponseEntity<GlobalDto<VidaStatusOcrDto>> ocr(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
@@ -164,7 +164,7 @@ public class EkycController {
         }
     }
 
-    @Operation(summary = "Demog validation", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Demog validation", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/demogs")
     public ResponseEntity<GlobalDto<Boolean>> demog(@Valid @RequestBody DemogCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
@@ -201,7 +201,7 @@ public class EkycController {
         }
     }
 
-    @Operation(summary = "Register by form and validate demog", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Register by form and validate demog", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/form-and-demogs")
     public ResponseEntity<GlobalDto<UserDto>> formAndDemog(@Valid @RequestBody UserCommandDto userCommandDto) throws JsonProcessingException, InterruptedException {
         User user = User.builder()
@@ -214,7 +214,7 @@ public class EkycController {
         return getGlobalDtoResponseEntity(user);
     }
 
-    @Operation(summary = "Liveness and validate face at once", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Liveness and validate face at once", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/composition/liveness-and-facematches")
     public ResponseEntity<GlobalDto<Boolean>> livenessAndFaceMatch(@Valid @RequestBody LnFmCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
@@ -247,7 +247,7 @@ public class EkycController {
         }
     }
 
-    @Operation(summary = "Inclome validation", security = @SecurityRequirement(name = "bearerAuth"))
+    @Operation(summary = "Inclome validation", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/incomes")
     public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> income(@Valid @RequestBody ExtraTaxCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());

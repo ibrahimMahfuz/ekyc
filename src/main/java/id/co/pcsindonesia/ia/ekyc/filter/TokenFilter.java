@@ -29,14 +29,13 @@ public class TokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain chain) throws ServletException, IOException {
-        String tokenDirty = request.getHeader("Authorization");
+        String token = request.getHeader("token");
 
-        if (tokenDirty == null || tokenDirty.isEmpty() ){
+        if (token == null || token.isEmpty() ){
             chain.doFilter(request, response);
             return;
         }
 
-        String token = tokenDirty.replace("Bearer ", "");
 
         Terminal terminal = terminalRepository.findByToken(token).orElse(null);
 
