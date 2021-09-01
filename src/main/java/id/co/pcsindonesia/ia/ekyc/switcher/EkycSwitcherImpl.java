@@ -61,13 +61,17 @@ public class EkycSwitcherImpl implements EkycSwitcher{
         return getType(profileServiceDtoList, ekycServiceCategoryProperty.getPhone(), "PHONE");
     }
 
-
     private Long getType(List<ProfileServiceDto> profileServiceDtoList, Long vendorId, String name){
         ProfileServiceDto filteredService = profileServiceDtoList
                 .stream()
                 .filter(profileServiceDto -> profileServiceDto.getServiceCategoryId().equals(vendorId))
                 .findFirst()
                 .orElseThrow(() -> new VendorServiceUnavailableException("we could not find "+name+" service in your profile, please check your terminal profile"));
-        return vendorServiceRepository.findById(filteredService.getVendorServiceId()).orElseThrow().getVendor().getId();
+        return vendorServiceRepository
+                .findById(
+                        filteredService.getVendorServiceId()
+                ).orElseThrow(() -> new VendorServiceUnavailableException("we could find "+name+" service and vendor, please check your terminal profile"))
+                .getVendor()
+                .getId();
     }
 }

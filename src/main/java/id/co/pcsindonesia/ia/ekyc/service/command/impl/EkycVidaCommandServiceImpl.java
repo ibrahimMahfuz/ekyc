@@ -69,13 +69,22 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
+        if (param.getEmail() == null || !param.getEmail().contains("@")) param.setEmail("nullEmail@emai.com");
+        if (param.getPhoneNo() == null ) param.setPhoneNo("081234567809");
+
         Double threshold = (param.getThreshold() == null)? vidaProperty.getFaceThreshold() : (param.getThreshold()/10);
+        String faceImage = null;
+        try{
+            faceImage = param.getFaceImage().split(",")[1];
+        }catch (Exception e){
+            faceImage = param.getFaceImage();
+        }
 
         VidaFmCommandDto vidaCidCommandDto = VidaFmCommandDto.builder()
                 .nik(param.getNik())
                 .phoneNo(param.getPhoneNo())
                 .email(param.getEmail())
-                .faceImage(param.getFaceImage())
+                .faceImage(faceImage)
                 .build();
         VidaAnotherGlobalCommandDto<VidaFmCommandDto> body = new VidaAnotherGlobalCommandDto<>(threshold, vidaCidCommandDto);
         ObjectMapper objectMapper = new ObjectMapper();

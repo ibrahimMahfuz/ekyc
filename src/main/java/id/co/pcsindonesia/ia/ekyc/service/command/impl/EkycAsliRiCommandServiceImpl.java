@@ -149,12 +149,18 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
         headers.add("token", asliRiProperty.getToken());
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
+        String faceImage = null;
+        try{
+            faceImage = param.getFaceImage().split(",")[1];
+        }catch (Exception e){
+            faceImage = param.getFaceImage();
+        }
 
         AsliRiProfessionalVerCommandDto build = AsliRiProfessionalVerCommandDto
                 .builder()
                 .trxId(trxId)
                 .nik(String.valueOf(param.getNik()))
-                .selfiePhoto(param.getFaceImage())
+                .selfiePhoto(faceImage)
                 .build();
 
         ObjectMapper objectMapper = new ObjectMapper();

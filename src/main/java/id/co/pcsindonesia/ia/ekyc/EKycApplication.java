@@ -15,9 +15,9 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 @OpenAPIDefinition
 @SecurityScheme(
         name = "apikey",
-        type = SecuritySchemeType.HTTP,
-        bearerFormat = "JWT",
-        scheme = "bearer"
+        type = SecuritySchemeType.APIKEY,
+        paramName = "token",
+        in = SecuritySchemeIn.HEADER
 )
 @EnableWebMvc
 @ConfigurationPropertiesScan
