@@ -146,7 +146,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                 .email(demogCommandDto.getEmail())
                 .build();
 
-        if (vidaDemogCommandDto.getEmail() == null) vidaDemogCommandDto.setEmail("nullEmail@emai.com");
+        if (vidaDemogCommandDto.getEmail() == null || !vidaDemogCommandDto.getEmail().contains("@")) vidaDemogCommandDto.setEmail("nullEmail@emai.com");
         if (vidaDemogCommandDto.getPhoneNo() == null ) vidaDemogCommandDto.setPhoneNo("081234567809");
 
         ObjectMapper objectMapper = new ObjectMapper();
