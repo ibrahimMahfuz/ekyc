@@ -11,7 +11,7 @@ public interface EkycVidaCommandService extends
         EkycCommandService<
                 VidaGlobalDto<VidaTransactionDto>,
                 OcrCommandDto,
-                VidaGlobalDto<VidaTransactionDto>,
+                VidaGlobalDto<VidaHacknessDto>,
                 LnFmCommandDto,
                 VidaGlobalDto<VidaTransactionDto>,
                 LnFmCommandDto,
@@ -22,7 +22,7 @@ public interface EkycVidaCommandService extends
     VidaGlobalDto<VidaTransactionDto> ocr(OcrCommandDto param) throws JsonProcessingException;
 
     @Override
-    VidaGlobalDto<VidaTransactionDto> liveness(LnFmCommandDto param) throws JsonProcessingException;
+    VidaGlobalDto<VidaHacknessDto> liveness(LnFmCommandDto param) throws JsonProcessingException;
 
     @Override
     VidaGlobalDto<VidaTransactionDto> faceMatch(LnFmCommandDto param) throws JsonProcessingException;

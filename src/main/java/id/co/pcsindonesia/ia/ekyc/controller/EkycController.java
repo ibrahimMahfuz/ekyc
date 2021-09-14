@@ -221,7 +221,7 @@ public class EkycController {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
         Long facematchType = ekycSwitcher.facematchType(service);
         if (facematchType.equals(ekycVendorProperty.getVida())){
-            // -- skip -- ekycVidaCommandService.liveness(body);
+            ekycVidaCommandService.liveness(body);
             VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
             VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()

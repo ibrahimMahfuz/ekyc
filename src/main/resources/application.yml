@@ -34,7 +34,7 @@ vida:
       scope: ${VIDA_OAUTH2_SCOPE:roles}
   properties:
     ocrUrl: https://${VIDA_OCR_URL:services-sandbox.vida.id/verify/v1/ktp/ocr}
-    livenessUrl: https://${VIDA_LIVENESS_URL:none}
+    livenessUrl: https://${VIDA_LIVENESS_URL:services-sandbox.vida.id/biometrics/v1/services/face/liveliness}
     faceMatchUrl: https://${VIDA_FACEMATCH_URL:services-sandbox.vida.id/verify/v1/face/match}
     demogLiteUrl: https://${VIDA_DEMOG_LITE_URL:services-sandbox.vida.id/verify/v1/demog-lite}
     statusTransactionUrl: https://${VIDA_TRANSACTION_STATUS_URL:services-sandbox.vida.id/verify/v1/transaction/}

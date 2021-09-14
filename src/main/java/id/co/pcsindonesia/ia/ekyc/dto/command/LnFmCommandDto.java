@@ -21,7 +21,6 @@ public class LnFmCommandDto {
     private Long nik;
 
     @NotBlank
-    @Email
     private String email;
 
     @NotBlank

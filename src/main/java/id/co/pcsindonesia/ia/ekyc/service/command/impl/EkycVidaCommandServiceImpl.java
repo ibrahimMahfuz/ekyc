@@ -59,8 +59,30 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
     }
 
     @Override
-    public VidaGlobalDto<VidaTransactionDto> liveness(LnFmCommandDto param) throws JsonProcessingException {
-        throw new VendorServerException("vida liveness service not found");
+    public VidaGlobalDto<VidaHacknessDto> liveness(LnFmCommandDto param) throws JsonProcessingException {
+        log.info("access service vida hackness");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String faceImage = null;
+        try{
+            faceImage = param.getFaceImage().split(",")[1];
+        }catch (Exception e){
+            faceImage = param.getFaceImage();
+        }
+
+        VidaHacknessCommandDto vidaHacknessCommandDto = new VidaHacknessCommandDto(faceImage);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String bodyString = objectMapper.writeValueAsString(vidaHacknessCommandDto);
+
+        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
+        ResponseEntity<VidaGlobalDto<VidaHacknessDto>> response = restTemplate.exchange(
+                vidaProperty.getLivenessUrl(),
+                HttpMethod.POST,
+                request,
+                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaHacknessDto.class).getType())
+        );
+        return response.getBody();
     }
 
     @Override
