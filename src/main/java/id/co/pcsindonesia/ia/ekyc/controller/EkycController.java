@@ -16,6 +16,7 @@ import id.co.pcsindonesia.ia.ekyc.service.command.UserCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.query.ProfileQueryService;
 import id.co.pcsindonesia.ia.ekyc.service.query.UserQueryService;
 import id.co.pcsindonesia.ia.ekyc.switcher.EkycSwitcher;
+import id.co.pcsindonesia.ia.ekyc.util.exception.BadRequestException;
 import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServiceUnavailableException;
 import id.co.pcsindonesia.ia.ekyc.util.properties.EkycVendorProperty;
 import io.swagger.v3.oas.annotations.Operation;
@@ -221,7 +222,10 @@ public class EkycController {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
         Long facematchType = ekycSwitcher.facematchType(service);
         if (facematchType.equals(ekycVendorProperty.getVida())){
-            ekycVidaCommandService.liveness(body);
+            VidaGlobalDto<VidaHacknessDto> liveness = ekycVidaCommandService.liveness(body);
+            if (liveness.getData().getScore() > 0.99){
+                throw new BadRequestException("your photo identified as hacked photo");
+            }
             VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
             VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()

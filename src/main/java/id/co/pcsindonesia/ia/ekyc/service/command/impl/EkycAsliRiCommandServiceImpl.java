@@ -11,6 +11,7 @@ import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiOcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiPhoneCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiProfessionalVerCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.*;
+import id.co.pcsindonesia.ia.ekyc.dto.query.vida.VidaGlobalDto;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycAsliRiCommandService;
 import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServiceUnavailableException;
 import id.co.pcsindonesia.ia.ekyc.util.properties.AsliRiProperty;
@@ -40,12 +41,33 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
         this.asliRiProperty = asliRiProperty;
     }
 
-    @Override
-    public AsliRiGlobalDto<AsliRiExtraTaxDto> extraTaxVerification(ExtraTaxCommandDto extraTaxCommandDto) throws JsonProcessingException {
-        log.info("access service asliri get extra tax");
+
+    private <L, M> AsliRiGlobalDto<L> requestToServer(
+            Class<L> className,
+            M body,
+            String url,
+            HttpMethod method
+    ) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("token", asliRiProperty.getToken());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String bodyString = objectMapper.writeValueAsString(body);
+
+        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
+        ResponseEntity<AsliRiGlobalDto<L>> response = restTemplate.exchange(
+                url,
+                method,
+                request,
+                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, className).getType())
+        );
+        return response.getBody();
+    }
+
+    @Override
+    public AsliRiGlobalDto<AsliRiExtraTaxDto> extraTaxVerification(ExtraTaxCommandDto extraTaxCommandDto) throws JsonProcessingException {
+        log.info("access service asliri get extra tax");
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
 
@@ -60,25 +82,12 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
                 .birthplace(extraTaxCommandDto.getBirthplace())
                 .build();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String bodyString = objectMapper.writeValueAsString(asliRiExtraTaxCommandDto);
-
-        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
-        ResponseEntity<AsliRiGlobalDto<AsliRiExtraTaxDto>> response = restTemplate.exchange(
-                asliRiProperty.getExtraTaxUrl(),
-                HttpMethod.POST,
-                request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(AsliRiGlobalDto.class, AsliRiExtraTaxDto.class).getType())
-        );
-        return response.getBody();
+        return requestToServer(AsliRiExtraTaxDto.class, asliRiExtraTaxCommandDto, asliRiProperty.getExtraTaxUrl(), HttpMethod.POST);
     }
 
     @Override
     public AsliRiGlobalDto<AsliRiPhoneDto> phoneVerification(PhoneCommandDto phoneCommandDto) throws JsonProcessingException {
         log.info("access service asliri get phone");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("token", asliRiProperty.getToken());
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
         String phone = phoneCommandDto.getPhoneNumber();
@@ -94,25 +103,12 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
                 .nik(String.valueOf(phoneCommandDto.getNik()))
                 .phone(phone)
                 .build();
-        ObjectMapper objectMapper = new ObjectMapper();
-        String bodyString = objectMapper.writeValueAsString(asliRiPhoneCommandDto);
-
-        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
-        ResponseEntity<AsliRiGlobalDto<AsliRiPhoneDto>> response = restTemplate.exchange(
-                asliRiProperty.getPhoneUrl(),
-                HttpMethod.POST,
-                request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(AsliRiGlobalDto.class, AsliRiPhoneDto.class).getType())
-        );
-        return response.getBody();
+        return requestToServer(AsliRiPhoneDto.class, asliRiPhoneCommandDto, asliRiProperty.getPhoneUrl(), HttpMethod.POST);
     }
 
     @Override
     public AsliRiOcrDto ocr(OcrCommandDto param) throws JsonProcessingException {
         log.info("access service asliri get ocr");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("token", asliRiProperty.getToken());
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
         String ktmImage = null;
@@ -123,17 +119,8 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
         }
         AsliRiOcrCommandDto build = AsliRiOcrCommandDto.builder().trxId(trxId).ktpImage(ktmImage).build();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String bodyString = objectMapper.writeValueAsString(build);
-
-        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
-        ResponseEntity<AsliRiGlobalDto<AsliRiOcrDto>> response = restTemplate.exchange(
-                asliRiProperty.getOcrUrl(),
-                HttpMethod.POST,
-                request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(AsliRiGlobalDto.class, AsliRiOcrDto.class).getType())
-        );
-        return Objects.requireNonNull(response.getBody()).getData();
+        var result = requestToServer(AsliRiOcrDto.class, build, asliRiProperty.getOcrUrl(), HttpMethod.POST);
+        return Objects.requireNonNull(result).getData();
     }
 
     @Override
@@ -144,9 +131,6 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
     @Override
     public Boolean faceMatch(LnFmCommandDto param) throws JsonProcessingException {
         log.info("access service asliri get facematch");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("token", asliRiProperty.getToken());
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
         String faceImage = null;
@@ -163,17 +147,8 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
                 .selfiePhoto(faceImage)
                 .build();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String bodyString = objectMapper.writeValueAsString(build);
-
-        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
-        ResponseEntity<AsliRiGlobalDto<AsliRiProfessionalVerDto>> response = restTemplate.exchange(
-                asliRiProperty.getFaceMatchUrl(),
-                HttpMethod.POST,
-                request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(AsliRiGlobalDto.class, AsliRiProfessionalVerDto.class).getType())
-        );
-        Double selfiePhoto = Objects.requireNonNull(response.getBody()).getData().getSelfiePhoto();
+        var result = requestToServer(AsliRiProfessionalVerDto.class, build, asliRiProperty.getFaceMatchUrl(), HttpMethod.POST);
+        Double selfiePhoto = Objects.requireNonNull(result).getData().getSelfiePhoto();
         Double threshold = (param.getThreshold() == null)? asliRiProperty.getFaceThreshold() : param.getThreshold();
         return selfiePhoto >= threshold;
     }

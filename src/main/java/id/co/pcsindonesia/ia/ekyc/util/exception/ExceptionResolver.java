@@ -84,6 +84,12 @@ public class ExceptionResolver {
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(value = {BadRequestException.class})
+    public ResponseEntity<GlobalErrorDto> badRequest(BadRequestException ex) {
+        GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), HttpStatus.BAD_REQUEST.getReasonPhrase());
+        return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(value = {AuthenticationException.class})
     public ResponseEntity<GlobalErrorDto> unauthenticatedHandler(AuthenticationException ex) {
         if (ex.getMessage().equals("No value present")) ex = new InternalAuthenticationServiceException("username or password is wrong");

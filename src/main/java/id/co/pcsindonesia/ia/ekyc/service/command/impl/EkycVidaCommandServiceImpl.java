@@ -36,69 +36,64 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         this.vidaProperty = vidaProperty;
     }
 
-
-    @Override
-    public VidaGlobalDto<VidaTransactionDto> ocr(OcrCommandDto param) throws JsonProcessingException {
-        log.info("access service vida get OCR");
+    private <L, M> VidaGlobalDto<L> requestToServer(
+            Class<L> classNmane,
+            M body,
+            String url,
+            HttpMethod method
+    ) throws JsonProcessingException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        VidaOcrCommandDto vidaOcrCommandDto = new VidaOcrCommandDto(param.getPhoto());
-        VidaGlobalCommandDto<VidaOcrCommandDto> body = new VidaGlobalCommandDto<>(vidaOcrCommandDto);
         ObjectMapper objectMapper = new ObjectMapper();
         String bodyString = objectMapper.writeValueAsString(body);
 
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
-        ResponseEntity<VidaGlobalDto<VidaTransactionDto>> response = restTemplate.exchange(
-                vidaProperty.getOcrUrl(),
-                HttpMethod.POST,
+        ResponseEntity<VidaGlobalDto<L>> response = restTemplate.exchange(
+                url,
+                method,
                 request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaTransactionDto.class).getType())
+                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, classNmane).getType())
         );
         return response.getBody();
+    }
+
+
+    @Override
+    public VidaGlobalDto<VidaTransactionDto> ocr(OcrCommandDto param) throws JsonProcessingException {
+        log.info("access service vida get OCR");
+
+        VidaOcrCommandDto vidaOcrCommandDto = new VidaOcrCommandDto(param.getPhoto());
+        VidaGlobalCommandDto<VidaOcrCommandDto> body = new VidaGlobalCommandDto<>(vidaOcrCommandDto);
+
+        return requestToServer(VidaTransactionDto.class, body, vidaProperty.getOcrUrl(), HttpMethod.POST);
     }
 
     @Override
     public VidaGlobalDto<VidaHacknessDto> liveness(LnFmCommandDto param) throws JsonProcessingException {
         log.info("access service vida hackness");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
         String faceImage = null;
-        try{
+        try {
             faceImage = param.getFaceImage().split(",")[1];
-        }catch (Exception e){
+        } catch (Exception e) {
             faceImage = param.getFaceImage();
         }
-
         VidaHacknessCommandDto vidaHacknessCommandDto = new VidaHacknessCommandDto(faceImage);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String bodyString = objectMapper.writeValueAsString(vidaHacknessCommandDto);
-
-        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
-        ResponseEntity<VidaGlobalDto<VidaHacknessDto>> response = restTemplate.exchange(
-                vidaProperty.getLivenessUrl(),
-                HttpMethod.POST,
-                request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaHacknessDto.class).getType())
-        );
-        return response.getBody();
+        return requestToServer(VidaHacknessDto.class, vidaHacknessCommandDto, vidaProperty.getLivenessUrl(), HttpMethod.POST);
     }
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> faceMatch(LnFmCommandDto param) throws JsonProcessingException {
         log.info("access service vida get face match");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
 
         if (param.getEmail() == null || !param.getEmail().contains("@")) param.setEmail("nullEmail@emai.com");
-        if (param.getPhoneNo() == null ) param.setPhoneNo("081234567809");
+        if (param.getPhoneNo() == null) param.setPhoneNo("081234567809");
 
-        Double threshold = (param.getThreshold() == null)? vidaProperty.getFaceThreshold() : (param.getThreshold()/10);
+        Double threshold = (param.getThreshold() == null) ? vidaProperty.getFaceThreshold() : (param.getThreshold() / 10);
         String faceImage = null;
-        try{
+        try {
             faceImage = param.getFaceImage().split(",")[1];
-        }catch (Exception e){
+        } catch (Exception e) {
             faceImage = param.getFaceImage();
         }
 
@@ -109,17 +104,8 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                 .faceImage(faceImage)
                 .build();
         VidaAnotherGlobalCommandDto<VidaFmCommandDto> body = new VidaAnotherGlobalCommandDto<>(threshold, vidaCidCommandDto);
-        ObjectMapper objectMapper = new ObjectMapper();
-        String bodyString = objectMapper.writeValueAsString(body);
 
-        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
-        ResponseEntity<VidaGlobalDto<VidaTransactionDto>> response = restTemplate.exchange(
-                vidaProperty.getFaceMatchUrl(),
-                HttpMethod.POST,
-                request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaTransactionDto.class).getType())
-        );
-        return response.getBody();
+        return requestToServer(VidaTransactionDto.class, body, vidaProperty.getFaceMatchUrl(), HttpMethod.POST);
     }
 
     @Override
@@ -133,7 +119,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
     }
 
     private <K> VidaStatusDto<K> sendGetStatus(String url, HttpEntity<String> entity, Class<K> responseClass, Integer loop) throws InterruptedException {
-        Thread.sleep((loop*1000));
+        Thread.sleep((loop * 1000));
         ResponseEntity<VidaStatusDto<K>> response =
                 restTemplate.exchange(
                         url,
@@ -142,23 +128,21 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                         ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaStatusDto.class, responseClass).getType())
                 );
         VidaStatusDto<K> body = response.getBody();
-        log.info("get status number: "+loop+" by url of "+url);
-        if (Objects.equals(body.getData().getStatus(), "success")){
+        log.info("get status number: " + loop + " by url of " + url);
+        if (Objects.equals(body.getData().getStatus(), "success")) {
             return body;
-        } else if (loop == 3){
-           throw new RequestTimeOutException("get status too long");
+        } else if (loop == 3) {
+            throw new RequestTimeOutException("get status too long");
         } else {
-            return sendGetStatus(url, entity, responseClass, loop+1);
+            return sendGetStatus(url, entity, responseClass, loop + 1);
         }
     }
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> demog(DemogCommandDto demogCommandDto) throws JsonProcessingException {
         log.info("access service vida get demog");
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
 
-        Double threshold = (demogCommandDto.getThreshold() == null)? vidaProperty.getFaceThreshold() : (demogCommandDto.getThreshold()/10);
+        Double threshold = (demogCommandDto.getThreshold() == null) ? vidaProperty.getFaceThreshold() : (demogCommandDto.getThreshold() / 10);
 
         VidaDemogCommandDto vidaDemogCommandDto = VidaDemogCommandDto.builder()
                 .nik(demogCommandDto.getNik())
@@ -168,20 +152,12 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                 .email(demogCommandDto.getEmail())
                 .build();
 
-        if (vidaDemogCommandDto.getEmail() == null || !vidaDemogCommandDto.getEmail().contains("@")) vidaDemogCommandDto.setEmail("nullEmail@emai.com");
-        if (vidaDemogCommandDto.getPhoneNo() == null ) vidaDemogCommandDto.setPhoneNo("081234567809");
+        if (vidaDemogCommandDto.getEmail() == null || !vidaDemogCommandDto.getEmail().contains("@"))
+            vidaDemogCommandDto.setEmail("nullEmail@emai.com");
+        if (vidaDemogCommandDto.getPhoneNo() == null) vidaDemogCommandDto.setPhoneNo("081234567809");
 
-        ObjectMapper objectMapper = new ObjectMapper();
         VidaAnotherGlobalCommandDto<VidaDemogCommandDto> body = new VidaAnotherGlobalCommandDto<>(threshold, vidaDemogCommandDto);
-        String bodyString = objectMapper.writeValueAsString(body);
 
-        HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
-        ResponseEntity<VidaGlobalDto<VidaTransactionDto>> response = restTemplate.exchange(
-                vidaProperty.getDemogLiteUrl(),
-                HttpMethod.POST,
-                request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, VidaTransactionDto.class).getType())
-        );
-        return response.getBody();
+        return requestToServer(VidaTransactionDto.class, body, vidaProperty.getDemogLiteUrl(), HttpMethod.POST);
     }
 }
