@@ -42,7 +42,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
     }
 
 
-    private <L, M> AsliRiGlobalDto<L> requestToServer(
+    private <L, M> AsliRiGlobalDto<L> requestToAsliRiServer(
             Class<L> className,
             M body,
             String url,
@@ -60,7 +60,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
                 url,
                 method,
                 request,
-                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, className).getType())
+                ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(AsliRiGlobalDto.class, className).getType())
         );
         return response.getBody();
     }
@@ -82,7 +82,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
                 .birthplace(extraTaxCommandDto.getBirthplace())
                 .build();
 
-        return requestToServer(AsliRiExtraTaxDto.class, asliRiExtraTaxCommandDto, asliRiProperty.getExtraTaxUrl(), HttpMethod.POST);
+        return requestToAsliRiServer(AsliRiExtraTaxDto.class, asliRiExtraTaxCommandDto, asliRiProperty.getExtraTaxUrl(), HttpMethod.POST);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
                 .nik(String.valueOf(phoneCommandDto.getNik()))
                 .phone(phone)
                 .build();
-        return requestToServer(AsliRiPhoneDto.class, asliRiPhoneCommandDto, asliRiProperty.getPhoneUrl(), HttpMethod.POST);
+        return requestToAsliRiServer(AsliRiPhoneDto.class, asliRiPhoneCommandDto, asliRiProperty.getPhoneUrl(), HttpMethod.POST);
     }
 
     @Override
@@ -119,7 +119,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
         }
         AsliRiOcrCommandDto build = AsliRiOcrCommandDto.builder().trxId(trxId).ktpImage(ktmImage).build();
 
-        var result = requestToServer(AsliRiOcrDto.class, build, asliRiProperty.getOcrUrl(), HttpMethod.POST);
+        var result = requestToAsliRiServer(AsliRiOcrDto.class, build, asliRiProperty.getOcrUrl(), HttpMethod.POST);
         return Objects.requireNonNull(result).getData();
     }
 
@@ -147,7 +147,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
                 .selfiePhoto(faceImage)
                 .build();
 
-        var result = requestToServer(AsliRiProfessionalVerDto.class, build, asliRiProperty.getFaceMatchUrl(), HttpMethod.POST);
+        var result = requestToAsliRiServer(AsliRiProfessionalVerDto.class, build, asliRiProperty.getFaceMatchUrl(), HttpMethod.POST);
         Double selfiePhoto = Objects.requireNonNull(result).getData().getSelfiePhoto();
         Double threshold = (param.getThreshold() == null)? asliRiProperty.getFaceThreshold() : param.getThreshold();
         return selfiePhoto >= threshold;

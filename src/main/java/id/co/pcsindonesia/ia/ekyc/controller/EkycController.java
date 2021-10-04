@@ -13,6 +13,7 @@ import id.co.pcsindonesia.ia.ekyc.service.command.EkycAsliRiCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycSimulationCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycVidaCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.command.UserCommandService;
+import id.co.pcsindonesia.ia.ekyc.service.command.impl.TempFallbackCommandService;
 import id.co.pcsindonesia.ia.ekyc.service.query.ProfileQueryService;
 import id.co.pcsindonesia.ia.ekyc.service.query.UserQueryService;
 import id.co.pcsindonesia.ia.ekyc.switcher.EkycSwitcher;
@@ -23,8 +24,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -49,6 +52,8 @@ public class EkycController {
 
     private final EkycSwitcher ekycSwitcher;
     private final EkycVendorProperty ekycVendorProperty;
+
+    private final TempFallbackCommandService tempFallbackCommandService;
 
     private ResponseEntity<GlobalDto<UserDto>>
     getGlobalDtoResponseEntity(User user)
@@ -123,7 +128,10 @@ public class EkycController {
 
     @Operation(summary = "OCR KTP", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/ocrs")
-    public ResponseEntity<GlobalDto<VidaStatusOcrDto>> ocr(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<VidaStatusOcrDto>> ocr(
+            @Valid @RequestBody OcrCommandDto body,
+            Principal principal
+    ) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
         Long ocrType = ekycSwitcher.ocrType(service);
         if (ocrType.equals(ekycVendorProperty.getVida())) {
@@ -224,7 +232,7 @@ public class EkycController {
         if (facematchType.equals(ekycVendorProperty.getVida())){
             VidaGlobalDto<VidaHacknessDto> liveness = ekycVidaCommandService.liveness(body);
             if (liveness.getData().getScore() > 0.99){
-                throw new BadRequestException("your photo identified as hacked photo");
+                throw new BadRequestException("your photo suspect as hacked photo");
             }
             VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
             VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
@@ -252,7 +260,29 @@ public class EkycController {
         }
     }
 
-    @Operation(summary = "Inclome validation", security = @SecurityRequirement(name = "apikey"))
+    @Operation(summary = "facematch vida 70, fallback asliRi", security = @SecurityRequirement(name = "apikey"))
+    @PostMapping("/facematches/vida-fall-asliri")
+    public ResponseEntity<GlobalDto<Boolean>> facematchVidaFallAsliRi(@Valid @RequestBody LnFmCommandDto body) throws JsonProcessingException, InterruptedException {
+        if (tempFallbackCommandService.checkIfVida()){
+            VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
+            if (vidaTransactionDtoVidaGlobalDto.getData().getTransactionId() != null) tempFallbackCommandService.addRequestToday();
+            VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
+            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(status.getData().getResult().getMatch())
+                    .build(), HttpStatus.OK);
+        }else {
+            Boolean faceMatch = ekycAsliRiCommandService.faceMatch(body);
+            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(faceMatch)
+                    .build(), HttpStatus.OK);
+        }
+    }
+
+        @Operation(summary = "Inclome validation", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/incomes")
     public ResponseEntity<GlobalDto<AsliRiGlobalDto<AsliRiExtraTaxDto>>> income(@Valid @RequestBody ExtraTaxCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
@@ -289,8 +319,17 @@ public class EkycController {
                     .message(HttpStatus.OK.getReasonPhrase())
                     .result(asliRiPhoneDtoAsliRiGlobalDto)
                     .build(), HttpStatus.OK);
-        }else {
+        } else {
             throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
         }
     }
+
+//    @Operation(summary = "Phone validation", security = @SecurityRequirement(name = "apikey"))
+//    @PostMapping(value = "/multipart", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE } )
+//    public ResponseEntity<?> multipart(
+//            @ModelAttribute TestMultipartCommandDto testMultipartCommandDto
+//            ) throws JsonProcessingException, InterruptedException {
+//            testMultipartCommandDto.getImage();
+//        return null;
+//    }
 }
