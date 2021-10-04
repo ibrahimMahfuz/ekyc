@@ -230,10 +230,11 @@ public class EkycController {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
         Long facematchType = ekycSwitcher.facematchType(service);
         if (facematchType.equals(ekycVendorProperty.getVida())){
-            VidaGlobalDto<VidaHacknessDto> liveness = ekycVidaCommandService.liveness(body);
-            if (liveness.getData().getScore() > 0.99){
-                throw new BadRequestException("your photo suspect as hacked photo");
-            }
+//            skip liveness
+//            VidaGlobalDto<VidaHacknessDto> liveness = ekycVidaCommandService.liveness(body);
+//            if (liveness.getData().getScore() > 0.99){
+//                throw new BadRequestException("your photo suspect as hacked photo");
+//            }
             VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
             VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
