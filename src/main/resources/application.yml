@@ -14,7 +14,7 @@ spring:
           time_zone: Asia/Jakarta
     open-in-view: true
 server:
-  port: 8300
+  port: 8400
 logging:
   level:
     org:
