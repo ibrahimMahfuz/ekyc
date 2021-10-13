@@ -55,6 +55,9 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
         ObjectMapper objectMapper = new ObjectMapper();
         String bodyString = objectMapper.writeValueAsString(body);
 
+        log.info("request url = {}", url);
+        log.info("request body = {}", bodyString);
+
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
         ResponseEntity<AsliRiGlobalDto<L>> response = restTemplate.exchange(
                 url,
@@ -67,7 +70,6 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
     @Override
     public AsliRiGlobalDto<AsliRiExtraTaxDto> extraTaxVerification(ExtraTaxCommandDto extraTaxCommandDto) throws JsonProcessingException {
-        log.info("access service asliri get extra tax");
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
 
@@ -87,7 +89,6 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
     @Override
     public AsliRiGlobalDto<AsliRiPhoneDto> phoneVerification(PhoneCommandDto phoneCommandDto) throws JsonProcessingException {
-        log.info("access service asliri get phone");
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
         String phone = phoneCommandDto.getPhoneNumber();
@@ -108,7 +109,6 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
     @Override
     public AsliRiOcrDto ocr(OcrCommandDto param) throws JsonProcessingException {
-        log.info("access service asliri get ocr");
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
         String ktmImage = null;
@@ -120,6 +120,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
         AsliRiOcrCommandDto build = AsliRiOcrCommandDto.builder().trxId(trxId).ktpImage(ktmImage).build();
 
         var result = requestToAsliRiServer(AsliRiOcrDto.class, build, asliRiProperty.getOcrUrl(), HttpMethod.POST);
+
         return Objects.requireNonNull(result).getData();
     }
 
@@ -130,7 +131,6 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
 
     @Override
     public Boolean faceMatch(LnFmCommandDto param) throws JsonProcessingException {
-        log.info("access service asliri get facematch");
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
         String faceImage = null;

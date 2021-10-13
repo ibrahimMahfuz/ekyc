@@ -48,6 +48,7 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         ObjectMapper objectMapper = new ObjectMapper();
         String bodyString = objectMapper.writeValueAsString(body);
 
+        log.info("request url = {}", url);
         log.info("request body = {}", bodyString);
 
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
