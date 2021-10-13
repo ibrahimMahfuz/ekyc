@@ -3,6 +3,8 @@ package id.co.pcsindonesia.ia.ekyc.util.exception;
 import id.co.pcsindonesia.ia.ekyc.dto.query.ErrorWithObectDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.GlobalErrorDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.vida.VidaGlobalErrorDto;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,17 +16,28 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@Slf4j
 public class ExceptionResolver {
+
+    private void removeMdc() {
+        MDC.remove("terminalId");
+        MDC.remove("serviceName");
+        MDC.remove("vendorName");
+    }
 
     @ExceptionHandler(value = {Exception.class})
     public ResponseEntity<GlobalErrorDto> globalHandler(Exception ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(value = {RequestTimeOutException.class})
     public ResponseEntity<GlobalErrorDto> globalHandler(RequestTimeOutException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.REQUEST_TIMEOUT.value(), ex.getMessage(), HttpStatus.REQUEST_TIMEOUT.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.REQUEST_TIMEOUT);
     }
 
@@ -45,48 +58,64 @@ public class ExceptionResolver {
                 ex.getOAuth2ErrorCode(),
                 vidaGlobalErrorDto
         );
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(vidaGlobalErrorDtoErrorWithObectDto, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(value = {AccessDeniedException.class})
     public ResponseEntity<GlobalErrorDto> forbiddenHandler(AccessDeniedException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.FORBIDDEN.value(), ex.getMessage(), HttpStatus.FORBIDDEN.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.FORBIDDEN);
     }
 
     @ExceptionHandler(value = {DataNotFoundException.class})
     public ResponseEntity<GlobalErrorDto> dataNotFoundHandler(DataNotFoundException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.NOT_FOUND.value(), ex.getMessage(), HttpStatus.NOT_FOUND.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(value = {InvalidDataAccessApiUsageException.class})
     public ResponseEntity<GlobalErrorDto> dataNotFoundHandler(InvalidDataAccessApiUsageException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), HttpStatus.BAD_REQUEST.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(value = {VendorServiceUnavailableException.class})
     public ResponseEntity<GlobalErrorDto> vendorServiceUnavailable(VendorServiceUnavailableException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage(), HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @ExceptionHandler(value = {VendorServerException.class})
     public ResponseEntity<GlobalErrorDto> vendorServer(VendorServerException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler(value = {VendorClienException.class})
     public ResponseEntity<GlobalErrorDto> vendorClient(VendorClienException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), HttpStatus.BAD_REQUEST.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(value = {BadRequestException.class})
     public ResponseEntity<GlobalErrorDto> badRequest(BadRequestException ex) {
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), HttpStatus.BAD_REQUEST.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -94,6 +123,8 @@ public class ExceptionResolver {
     public ResponseEntity<GlobalErrorDto> unauthenticatedHandler(AuthenticationException ex) {
         if (ex.getMessage().equals("No value present")) ex = new InternalAuthenticationServiceException("username or password is wrong");
         GlobalErrorDto GlobalErrorResponse = new GlobalErrorDto(HttpStatus.UNAUTHORIZED.value(), ex.getMessage(), HttpStatus.UNAUTHORIZED.getReasonPhrase());
+        log.error("catching Error", ex);
+        removeMdc();
         return new ResponseEntity<>(GlobalErrorResponse, HttpStatus.UNAUTHORIZED);
     }
 

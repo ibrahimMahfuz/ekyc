@@ -19,11 +19,11 @@ logging:
   level:
     org:
       apache:
-        http: debug
+        http: error
     httpclient:
-      wire: debug
-  file:
-    path: ./log
+      wire: error
+  pattern:
+    console: "%clr(%d{${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} - %clr([tid: %X{terminalId}]){brown} - %clr([s: %X{serviceName}]){yellow} - %clr([v: %X{vendorName}]){blue} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"
 vida:
   oauth2:
     client:
@@ -38,6 +38,7 @@ vida:
     faceMatchUrl: https://${VIDA_FACEMATCH_URL:services-sandbox.vida.id/verify/v1/face/match}
     demogLiteUrl: https://${VIDA_DEMOG_LITE_URL:services-sandbox.vida.id/verify/v1/demog-lite}
     statusTransactionUrl: https://${VIDA_TRANSACTION_STATUS_URL:services-sandbox.vida.id/verify/v1/transaction/}
+    facematchStatusTransactionUrl: https://${VIDA_FACEMATCH_TRANSACTION_STATUS_URL:services-sandbox.vida.id/verify/v1/face/match/transaction}
     faceThreshold: ${VIDA_FACE_THRESHOLD:3.0}
     demogThreshold: ${VIDA_DEMOG_THRESHOLD:1.0}
 asliri:

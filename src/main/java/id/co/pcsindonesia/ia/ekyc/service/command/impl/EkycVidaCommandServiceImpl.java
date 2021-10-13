@@ -48,6 +48,8 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
         ObjectMapper objectMapper = new ObjectMapper();
         String bodyString = objectMapper.writeValueAsString(body);
 
+        log.info("request body = {}", bodyString);
+
         HttpEntity<String> request = new HttpEntity<>(bodyString, headers);
         ResponseEntity<VidaGlobalDto<L>> response = restTemplate.exchange(
                 url,
@@ -55,23 +57,28 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                 request,
                 ParameterizedTypeReference.forType(ResolvableType.forClassWithGenerics(VidaGlobalDto.class, classNmane).getType())
         );
+
         return response.getBody();
     }
 
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> ocr(OcrCommandDto param) throws JsonProcessingException {
-        log.info("access service vida get OCR");
 
         VidaOcrCommandDto vidaOcrCommandDto = new VidaOcrCommandDto(param.getPhoto());
+
         VidaGlobalCommandDto<VidaOcrCommandDto> body = new VidaGlobalCommandDto<>(vidaOcrCommandDto);
 
-        return requestToServer(VidaTransactionDto.class, body, vidaProperty.getOcrUrl(), HttpMethod.POST);
+        VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = requestToServer(VidaTransactionDto.class, body, vidaProperty.getOcrUrl(), HttpMethod.POST);
+
+        log.info("response transaction id = {}", vidaTransactionDtoVidaGlobalDto.getData().getTransactionId());
+
+        return vidaTransactionDtoVidaGlobalDto;
+
     }
 
     @Override
     public VidaGlobalDto<VidaHacknessDto> liveness(LnFmCommandDto param) throws JsonProcessingException {
-        log.info("access service vida hackness");
         String faceImage = null;
         try {
             faceImage = param.getFaceImage().split(",")[1];
@@ -79,13 +86,16 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
             faceImage = param.getFaceImage();
         }
         VidaHacknessCommandDto vidaHacknessCommandDto = new VidaHacknessCommandDto(faceImage);
-        return requestToServer(VidaHacknessDto.class, vidaHacknessCommandDto, vidaProperty.getLivenessUrl(), HttpMethod.POST);
+        VidaGlobalDto<VidaHacknessDto> vidaHacknessDtoVidaGlobalDto = requestToServer(VidaHacknessDto.class, vidaHacknessCommandDto, vidaProperty.getLivenessUrl(), HttpMethod.POST);
+
+        log.info("vida hackess score = {}", vidaHacknessDtoVidaGlobalDto.getData().getScore());
+
+        return vidaHacknessDtoVidaGlobalDto;
+
     }
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> faceMatch(LnFmCommandDto param) throws JsonProcessingException {
-        log.info("access service vida get face match");
-
         if (param.getEmail() == null || !param.getEmail().contains("@")) param.setEmail("nullEmail@emai.com");
         if (param.getPhoneNo() == null) param.setPhoneNo("081234567809");
 
@@ -105,12 +115,17 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
                 .build();
         VidaAnotherGlobalCommandDto<VidaFmCommandDto> body = new VidaAnotherGlobalCommandDto<>(threshold, vidaCidCommandDto);
 
-        return requestToServer(VidaTransactionDto.class, body, vidaProperty.getFaceMatchUrl(), HttpMethod.POST);
+        VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = requestToServer(VidaTransactionDto.class, body, vidaProperty.getFaceMatchUrl(), HttpMethod.POST);
+
+        log.info("response transaction id = {}", vidaTransactionDtoVidaGlobalDto.getData().getTransactionId());
+
+        return vidaTransactionDtoVidaGlobalDto;
+
     }
 
     @Override
     public <T> VidaStatusDto<T> getStatus(String tid, Class<T> responseClass) throws InterruptedException {
-        log.info("access service vida get status");
+        log.info("get statu for transactionId = {}", tid);
         final String FULL_URL = vidaProperty.getStatusTransactionUrl() + tid;
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
@@ -140,8 +155,6 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
     @Override
     public VidaGlobalDto<VidaTransactionDto> demog(DemogCommandDto demogCommandDto) throws JsonProcessingException {
-        log.info("access service vida get demog");
-
         Double threshold = (demogCommandDto.getThreshold() == null) ? vidaProperty.getFaceThreshold() : (demogCommandDto.getThreshold() / 10);
 
         VidaDemogCommandDto vidaDemogCommandDto = VidaDemogCommandDto.builder()
@@ -158,6 +171,10 @@ public class EkycVidaCommandServiceImpl implements EkycVidaCommandService {
 
         VidaAnotherGlobalCommandDto<VidaDemogCommandDto> body = new VidaAnotherGlobalCommandDto<>(threshold, vidaDemogCommandDto);
 
-        return requestToServer(VidaTransactionDto.class, body, vidaProperty.getDemogLiteUrl(), HttpMethod.POST);
+        VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = requestToServer(VidaTransactionDto.class, body, vidaProperty.getDemogLiteUrl(), HttpMethod.POST);
+
+        log.info("response transaction id = {}", vidaTransactionDtoVidaGlobalDto.getData().getTransactionId());
+
+        return vidaTransactionDtoVidaGlobalDto;
     }
 }

@@ -23,6 +23,8 @@ import id.co.pcsindonesia.ia.ekyc.util.properties.EkycVendorProperty;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +41,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/")
 @AllArgsConstructor
+@Slf4j
 public class EkycController {
 
     private final ProfileQueryService profileQueryService;
@@ -96,7 +99,10 @@ public class EkycController {
     @Operation(summary = "Get token and profile")
     @PostMapping("/profiles")
     public ResponseEntity<GlobalDto<ProfileDto>> profile(@RequestBody ProfileCommadDto body) {
+        MDC.put("terminalId", String.valueOf(body.getTerminalId()));
         ProfileDto profileByTerminalId = profileQueryService.getProfileByTerminalId(body.getTerminalId());
+        log.info("get profile = {}", profileByTerminalId.toString());
+        MDC.remove("terminalId");
         return new ResponseEntity<>(GlobalDto.<ProfileDto>builder()
                 .code(HttpStatus.OK.value())
                 .message(HttpStatus.OK.getReasonPhrase())
@@ -137,6 +143,10 @@ public class EkycController {
         if (ocrType.equals(ekycVendorProperty.getVida())) {
             VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
             VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
+
+            log.info("final result = {}", status.getData().getResult());
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<VidaStatusOcrDto>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -164,6 +174,10 @@ public class EkycController {
                     .statusPerkawinan(ocr.getStatusPerkawinan())
                     .kelurahanDesa(ocr.getKelurahanDesa())
                     .build();
+
+            log.info("final result = {}", ocrDto);
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<VidaStatusOcrDto>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -184,6 +198,10 @@ public class EkycController {
             if (demogType.equals(ekycVendorProperty.getVida())) {
                 VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.demog(body);
                 VidaStatusDto<VidaDemogDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaDemogDto.class);
+
+                log.info("final result = {}", status.getData().getResult());
+                removeMdc();
+
                 return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                         .code(HttpStatus.OK.value())
                         .message(HttpStatus.OK.getReasonPhrase())
@@ -191,9 +209,16 @@ public class EkycController {
                         .build(), HttpStatus.OK);
             } else if (demogType.equals(ekycVendorProperty.getAsliRi())) {
                 ekycAsliRiCommandService.ocr(null);
+
+                removeMdc();
+
                 return null;
             } else if (demogType.equals(ekycVendorProperty.getSimulation())) {
                 Boolean demog = ekycSimulationCommandService.demog(null);
+
+                log.info("final result = {}", demog);
+                removeMdc();
+
                 return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                         .code(HttpStatus.OK.value())
                         .message(HttpStatus.OK.getReasonPhrase())
@@ -203,12 +228,22 @@ public class EkycController {
                 throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
             }
         }else {
+
+            log.info("final result from database = {}", nikVerified);
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
                     .result(nikVerified)
                     .build(), HttpStatus.OK);
         }
+    }
+
+    private void removeMdc() {
+        MDC.remove("terminalId");
+        MDC.remove("serviceName");
+        MDC.remove("vendorName");
     }
 
     @Operation(summary = "Register by form and validate demog", security = @SecurityRequirement(name = "apikey"))
@@ -237,6 +272,10 @@ public class EkycController {
 //            }
             VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
             VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
+
+            log.info("final result = {}", status.getData().getResult());
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -244,6 +283,10 @@ public class EkycController {
                     .build(), HttpStatus.OK);
         }else if (facematchType.equals(ekycVendorProperty.getAsliRi())){
             Boolean faceMatch = ekycAsliRiCommandService.faceMatch(body);
+
+            log.info("final result = {}", faceMatch);
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -251,6 +294,10 @@ public class EkycController {
                     .build(), HttpStatus.OK);
         }else if (facematchType.equals(ekycVendorProperty.getSimulation())){
             Boolean faceMatch = ekycSimulationCommandService.faceMatch(null);
+
+            log.info("final result = {}", faceMatch);
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -265,16 +312,28 @@ public class EkycController {
     @PostMapping("/facematches/vida-fall-asliri")
     public ResponseEntity<GlobalDto<Boolean>> facematchVidaFallAsliRi(@Valid @RequestBody LnFmCommandDto body) throws JsonProcessingException, InterruptedException {
         if (tempFallbackCommandService.checkIfVida()){
+            MDC.put("serviceName", "fallback face-match");
+            MDC.put("vendorName", "vida");
             VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
             if (vidaTransactionDtoVidaGlobalDto.getData().getTransactionId() != null) tempFallbackCommandService.addRequestToday();
             VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
+
+            log.info("final result = {}", status.getData().getResult());
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
                     .result(status.getData().getResult().getMatch())
                     .build(), HttpStatus.OK);
         }else {
+            MDC.put("serviceName", "fallback face-match");
+            MDC.put("vendorName", "AsliRi");
             Boolean faceMatch = ekycAsliRiCommandService.faceMatch(body);
+
+            log.info("final result = {}", faceMatch);
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -290,6 +349,10 @@ public class EkycController {
         Long incomeType = ekycSwitcher.incomeType(service);
         if (incomeType.equals(ekycVendorProperty.getAsliRi())){
             AsliRiGlobalDto<AsliRiExtraTaxDto> asliRiExtraTaxDtoAsliRiGlobalDto = ekycAsliRiCommandService.extraTaxVerification(body);
+
+            log.info("final result = {}", asliRiExtraTaxDtoAsliRiGlobalDto);
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiExtraTaxDto>>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -297,6 +360,10 @@ public class EkycController {
                     .build(), HttpStatus.OK);
         }else if (incomeType.equals(ekycVendorProperty.getSimulation())){
             AsliRiGlobalDto<AsliRiExtraTaxDto> asliRiExtraTaxDtoAsliRiGlobalDto = ekycSimulationCommandService.extraTaxVerification();
+
+            log.info("final result = {}", asliRiExtraTaxDtoAsliRiGlobalDto);
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiExtraTaxDto>>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -315,6 +382,10 @@ public class EkycController {
         Long phoneType = ekycSwitcher.phoneType(service);
         if (phoneType.equals(ekycVendorProperty.getAsliRi())) {
             AsliRiGlobalDto<AsliRiPhoneDto> asliRiPhoneDtoAsliRiGlobalDto = ekycAsliRiCommandService.phoneVerification(body);
+
+            log.info("final result = {}", asliRiPhoneDtoAsliRiGlobalDto);
+            removeMdc();
+
             return new ResponseEntity<>(GlobalDto.<AsliRiGlobalDto<AsliRiPhoneDto>>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
@@ -325,12 +396,4 @@ public class EkycController {
         }
     }
 
-//    @Operation(summary = "Phone validation", security = @SecurityRequirement(name = "apikey"))
-//    @PostMapping(value = "/multipart", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE } )
-//    public ResponseEntity<?> multipart(
-//            @ModelAttribute TestMultipartCommandDto testMultipartCommandDto
-//            ) throws JsonProcessingException, InterruptedException {
-//            testMultipartCommandDto.getImage();
-//        return null;
-//    }
 }

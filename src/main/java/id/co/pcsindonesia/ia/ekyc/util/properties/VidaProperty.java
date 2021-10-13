@@ -11,6 +11,7 @@ public class VidaProperty {
     private String faceMatchUrl;
     private String demogLiteUrl;
     private String statusTransactionUrl;
+    private String facematchStatusTransactionUrl;
     private Double faceThreshold;
     private Double demogThreshold;
 
