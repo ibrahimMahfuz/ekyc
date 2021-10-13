@@ -199,13 +199,14 @@ public class EkycController {
                 VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.demog(body);
                 VidaStatusDto<VidaDemogDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaDemogDto.class);
 
+                Double th = (body.getThreshold() / 10);
                 log.info("final result = {}", status.getData().getResult());
                 removeMdc();
 
                 return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                         .code(HttpStatus.OK.value())
                         .message(HttpStatus.OK.getReasonPhrase())
-                        .result(status.getData().getResult().getMatch())
+                        .result((status.getData().getResult().getScore() >= th))
                         .build(), HttpStatus.OK);
             } else if (demogType.equals(ekycVendorProperty.getAsliRi())) {
                 ekycAsliRiCommandService.ocr(null);
@@ -273,13 +274,14 @@ public class EkycController {
             VidaGlobalDto<VidaTransactionDto> vidaTransactionDtoVidaGlobalDto = ekycVidaCommandService.faceMatch(body);
             VidaStatusDto<VidaFaceMatchDto> status = ekycVidaCommandService.getStatus(vidaTransactionDtoVidaGlobalDto.getData().getTransactionId(), VidaFaceMatchDto.class);
 
+            Double th = (body.getThreshold() / 10);
             log.info("final result = {}", status.getData().getResult());
             removeMdc();
 
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
-                    .result(status.getData().getResult().getMatch())
+                    .result((status.getData().getResult().getScore() >= th))
                     .build(), HttpStatus.OK);
         }else if (facematchType.equals(ekycVendorProperty.getAsliRi())){
             Boolean faceMatch = ekycAsliRiCommandService.faceMatch(body);
