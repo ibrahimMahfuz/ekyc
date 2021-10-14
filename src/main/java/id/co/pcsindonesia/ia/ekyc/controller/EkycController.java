@@ -17,7 +17,6 @@ import id.co.pcsindonesia.ia.ekyc.service.command.impl.TempFallbackCommandServic
 import id.co.pcsindonesia.ia.ekyc.service.query.ProfileQueryService;
 import id.co.pcsindonesia.ia.ekyc.service.query.UserQueryService;
 import id.co.pcsindonesia.ia.ekyc.switcher.EkycSwitcher;
-import id.co.pcsindonesia.ia.ekyc.util.exception.BadRequestException;
 import id.co.pcsindonesia.ia.ekyc.util.exception.VendorServiceUnavailableException;
 import id.co.pcsindonesia.ia.ekyc.util.properties.EkycVendorProperty;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,10 +25,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -190,7 +187,7 @@ public class EkycController {
 
     @Operation(summary = "Demog validation", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/demogs")
-    public ResponseEntity<GlobalDto<Boolean>> demog(@Valid @RequestBody DemogCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<MatchAndScoreDto>> demog(@Valid @RequestBody DemogCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
         Long demogType = ekycSwitcher.demogType(service);
         Boolean nikVerified = userQueryService.isNikVerified(body.getNik());
@@ -203,10 +200,10 @@ public class EkycController {
                 log.info("final result = {}", status.getData().getResult());
                 removeMdc();
 
-                return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                return new ResponseEntity<>(GlobalDto.<MatchAndScoreDto>builder()
                         .code(HttpStatus.OK.value())
                         .message(HttpStatus.OK.getReasonPhrase())
-                        .result((status.getData().getResult().getScore() >= th))
+                        .result(new MatchAndScoreDto((status.getData().getResult().getScore() >= th), status.getData().getResult().getScore()))
                         .build(), HttpStatus.OK);
             } else if (demogType.equals(ekycVendorProperty.getAsliRi())) {
                 ekycAsliRiCommandService.ocr(null);
@@ -220,10 +217,10 @@ public class EkycController {
                 log.info("final result = {}", demog);
                 removeMdc();
 
-                return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+                return new ResponseEntity<>(GlobalDto.<MatchAndScoreDto>builder()
                         .code(HttpStatus.OK.value())
                         .message(HttpStatus.OK.getReasonPhrase())
-                        .result(demog)
+                        .result(new MatchAndScoreDto(demog, null))
                         .build(), HttpStatus.OK);
             } else {
                 throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
@@ -233,10 +230,10 @@ public class EkycController {
             log.info("final result from database = {}", nikVerified);
             removeMdc();
 
-            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+            return new ResponseEntity<>(GlobalDto.<MatchAndScoreDto>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
-                    .result(nikVerified)
+                    .result(new MatchAndScoreDto(nikVerified, null))
                     .build(), HttpStatus.OK);
         }
     }
@@ -262,7 +259,7 @@ public class EkycController {
 
     @Operation(summary = "Liveness and validate face at once", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/composition/liveness-and-facematches")
-    public ResponseEntity<GlobalDto<Boolean>> livenessAndFaceMatch(@Valid @RequestBody LnFmCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<MatchAndScoreDto>> livenessAndFaceMatch(@Valid @RequestBody LnFmCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
         Long facematchType = ekycSwitcher.facematchType(service);
         if (facematchType.equals(ekycVendorProperty.getVida())){
@@ -278,10 +275,10 @@ public class EkycController {
             log.info("final result = {}", status.getData().getResult());
             removeMdc();
 
-            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+            return new ResponseEntity<>(GlobalDto.<MatchAndScoreDto>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
-                    .result((status.getData().getResult().getScore() >= th))
+                    .result(new MatchAndScoreDto((status.getData().getResult().getScore() >= th), status.getData().getResult().getScore()))
                     .build(), HttpStatus.OK);
         }else if (facematchType.equals(ekycVendorProperty.getAsliRi())){
             Boolean faceMatch = ekycAsliRiCommandService.faceMatch(body);
@@ -289,10 +286,10 @@ public class EkycController {
             log.info("final result = {}", faceMatch);
             removeMdc();
 
-            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+            return new ResponseEntity<>(GlobalDto.<MatchAndScoreDto>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
-                    .result(faceMatch)
+                    .result(new MatchAndScoreDto(faceMatch, null))
                     .build(), HttpStatus.OK);
         }else if (facematchType.equals(ekycVendorProperty.getSimulation())){
             Boolean faceMatch = ekycSimulationCommandService.faceMatch(null);
@@ -300,10 +297,10 @@ public class EkycController {
             log.info("final result = {}", faceMatch);
             removeMdc();
 
-            return new ResponseEntity<>(GlobalDto.<Boolean>builder()
+            return new ResponseEntity<>(GlobalDto.<MatchAndScoreDto>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
-                    .result(faceMatch)
+                    .result(new MatchAndScoreDto(faceMatch, null))
                     .build(), HttpStatus.OK);
         }else {
             throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
