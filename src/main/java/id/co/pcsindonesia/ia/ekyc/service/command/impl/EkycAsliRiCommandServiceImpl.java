@@ -10,6 +10,7 @@ import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiExtraTaxCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiOcrCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiPhoneCommandDto;
 import id.co.pcsindonesia.ia.ekyc.dto.command.asliri.AsliRiProfessionalVerCommandDto;
+import id.co.pcsindonesia.ia.ekyc.dto.query.MatchAndScoreDto;
 import id.co.pcsindonesia.ia.ekyc.dto.query.asliri.*;
 import id.co.pcsindonesia.ia.ekyc.dto.query.vida.VidaGlobalDto;
 import id.co.pcsindonesia.ia.ekyc.service.command.EkycAsliRiCommandService;
@@ -130,7 +131,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
     }
 
     @Override
-    public Boolean faceMatch(LnFmCommandDto param) throws JsonProcessingException {
+    public MatchAndScoreDto faceMatch(LnFmCommandDto param) throws JsonProcessingException {
 
         String trxId = UUID.randomUUID().toString().replace("-","x");
         String faceImage = null;
@@ -150,7 +151,7 @@ public class EkycAsliRiCommandServiceImpl implements EkycAsliRiCommandService {
         var result = requestToAsliRiServer(AsliRiProfessionalVerDto.class, build, asliRiProperty.getFaceMatchUrl(), HttpMethod.POST);
         Double selfiePhoto = Objects.requireNonNull(result).getData().getSelfiePhoto();
         Double threshold = (param.getThreshold() == null)? asliRiProperty.getFaceThreshold() : param.getThreshold();
-        return selfiePhoto >= threshold;
+        return new MatchAndScoreDto(selfiePhoto >= threshold, selfiePhoto);
     }
 
 

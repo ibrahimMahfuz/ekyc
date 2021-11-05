@@ -281,7 +281,7 @@ public class EkycController {
                     .result(new MatchAndScoreDto((status.getData().getResult().getScore() >= th), status.getData().getResult().getScore()))
                     .build(), HttpStatus.OK);
         }else if (facematchType.equals(ekycVendorProperty.getAsliRi())){
-            Boolean faceMatch = ekycAsliRiCommandService.faceMatch(body);
+            MatchAndScoreDto faceMatch = ekycAsliRiCommandService.faceMatch(body);
 
             log.info("final result = {}", faceMatch);
             removeMdc();
@@ -289,7 +289,7 @@ public class EkycController {
             return new ResponseEntity<>(GlobalDto.<MatchAndScoreDto>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
-                    .result(new MatchAndScoreDto(faceMatch, null))
+                    .result(faceMatch)
                     .build(), HttpStatus.OK);
         }else if (facematchType.equals(ekycVendorProperty.getSimulation())){
             Boolean faceMatch = ekycSimulationCommandService.faceMatch(null);
@@ -328,7 +328,7 @@ public class EkycController {
         }else {
             MDC.put("serviceName", "fallback face-match");
             MDC.put("vendorName", "AsliRi");
-            Boolean faceMatch = ekycAsliRiCommandService.faceMatch(body);
+            MatchAndScoreDto faceMatch = ekycAsliRiCommandService.faceMatch(body);
 
             log.info("final result = {}", faceMatch);
             removeMdc();
@@ -336,7 +336,7 @@ public class EkycController {
             return new ResponseEntity<>(GlobalDto.<Boolean>builder()
                     .code(HttpStatus.OK.value())
                     .message(HttpStatus.OK.getReasonPhrase())
-                    .result(faceMatch)
+                    .result(faceMatch.getMatch())
                     .build(), HttpStatus.OK);
         }
     }
