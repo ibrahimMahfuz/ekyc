@@ -109,23 +109,58 @@ public class EkycController {
 
     @Operation(summary = "OCR KTP and validate demog at once", security = @SecurityRequirement(name = "apikey"))
     @PostMapping("/composition/ocr-and-demogs")
-    public ResponseEntity<GlobalDto<UserDto>> ocrAndDemog(@Valid @RequestBody OcrCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
+    public ResponseEntity<GlobalDto<VidaStatusOcrDto>> ocrAndDemog(@Valid @RequestBody OcrDemogCommandDto body, Principal principal) throws JsonProcessingException, InterruptedException {
         List<ProfileServiceDto> service = ekycSwitcher.getService(principal.getName());
-        if (ekycSwitcher.ocrType(service).equals(ekycVendorProperty.getVida())) {
-            VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(body);
+        Long ocrType = ekycSwitcher.ocrType(service);
+        if (ocrType.equals(ekycVendorProperty.getVida())) {
+            VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.ocr(new OcrCommandDto(body.getPhoto()));
             VidaStatusDto<VidaStatusOcrDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaStatusOcrDto.class);
-            LocalDate ldate = LocalDate.parse(status.getData().getResult().getTanggalLahir(), DateTimeFormatter.ofPattern("dd-MM-yyyy"));
-            User user = User.builder()
-                    .nik(status.getData().getResult().getNik())
-                    .name(status.getData().getResult().getNama())
-                    .dob(ldate)
-                    .pob(status.getData().getResult().getTempatLahir())
-                    .verified(true)
+
+            log.info("final result = {}", status.getData().getResult());
+            VidaStatusOcrDto result = demogsInternal(status.getData().getResult(), service, body.getThreshold());
+            removeMdc();
+
+            return new ResponseEntity<>(GlobalDto.<VidaStatusOcrDto>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(result)
+                    .build(), HttpStatus.OK);
+
+        } else if (ocrType.equals(ekycVendorProperty.getAsliRi())) {
+            AsliRiOcrDto ocr = ekycAsliRiCommandService.ocr(new OcrCommandDto(body.getPhoto()));
+            VidaStatusOcrDto ocrDto = VidaStatusOcrDto
+                    .builder()
+                    .nik(Long.parseLong(ocr.getNik()))
+                    .provinsi(ocr.getProvinsi())
+                    .kabupatenKota(ocr.getKota())
+                    .golonganDarah(ocr.getGolDarah())
+                    .agama(ocr.getAgama())
+                    .alamat(ocr.getAlamat())
+                    .berlakuHingga("SEUMUR HIDUP")
+                    .kewarganegaraan(ocr.getKewarganegaraan())
+                    .nama(ocr.getNama())
+                    .pekerjaan(ocr.getPekerjaan())
+                    .tempatLahir(ocr.getTempatLahir())
+                    .kecamatan(ocr.getKecamatan())
+                    .jenisKelamin(ocr.getJenisKelamin())
+                    .rtRw(ocr.getRtRw())
+                    .tanggalLahir(ocr.getTanggalLahir())
+                    .statusPerkawinan(ocr.getStatusPerkawinan())
+                    .kelurahanDesa(ocr.getKelurahanDesa())
                     .build();
-            return getGlobalDtoResponseEntity(user);
+
+            log.info("final result = {}", ocrDto);
+            VidaStatusOcrDto result = demogsInternal(ocrDto, service, body.getThreshold());
+
+            removeMdc();
+
+            return new ResponseEntity<>(GlobalDto.<VidaStatusOcrDto>builder()
+                    .code(HttpStatus.OK.value())
+                    .message(HttpStatus.OK.getReasonPhrase())
+                    .result(result)
+                    .build(), HttpStatus.OK);
         } else {
-            ekycAsliRiCommandService.ocr(null);
-            return null;
+            throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
         }
     }
 
@@ -182,6 +217,72 @@ public class EkycController {
                     .build(), HttpStatus.OK);
         } else {
             throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
+        }
+    }
+
+    private VidaStatusOcrDto demogsInternal(
+            VidaStatusOcrDto vidaStatusOcrDto,
+            List<ProfileServiceDto> service,
+            Double therhold
+    ) throws JsonProcessingException, InterruptedException {
+
+        DemogCommandDto body = DemogCommandDto.builder()
+                .nik(vidaStatusOcrDto.getNik())
+                .fullName(vidaStatusOcrDto.getNama())
+                .dob(
+                        (LocalDate.parse(vidaStatusOcrDto.getTanggalLahir(), DateTimeFormatter.ofPattern("dd-MM-yyyy")))
+                )
+                .phoneNo("62888888888")
+                .email("dummy@mail.com")
+                .threshold(therhold)
+                .build();
+
+        Long demogType = ekycSwitcher.demogType(service);
+        Boolean nikVerified = userQueryService.isNikVerified(body.getNik());
+        if (!nikVerified){
+            if (demogType.equals(ekycVendorProperty.getVida())) {
+
+                VidaGlobalDto<VidaTransactionDto> ocr = ekycVidaCommandService.demog(body);
+                VidaStatusDto<VidaDemogDto> status = ekycVidaCommandService.getStatus(ocr.getData().getTransactionId(), VidaDemogDto.class);
+
+                Double th = (therhold / 10);
+                log.info("final result demog after ocr = {}", status.getData().getResult());
+                removeMdc();
+
+                vidaStatusOcrDto.setMatch((status.getData().getResult().getScore() >= th));
+                vidaStatusOcrDto.setScore(status.getData().getResult().getScore());
+
+                return vidaStatusOcrDto;
+
+
+            } else if (demogType.equals(ekycVendorProperty.getAsliRi())) {
+                ekycAsliRiCommandService.ocr(null);
+
+                removeMdc();
+
+                return null;
+            } else if (demogType.equals(ekycVendorProperty.getSimulation())) {
+                Boolean demog = ekycSimulationCommandService.demog(null);
+
+                log.info("final result demog after ocr = {}", demog);
+                removeMdc();
+
+                vidaStatusOcrDto.setMatch(demog);
+                vidaStatusOcrDto.setScore(null);
+
+                return vidaStatusOcrDto;
+            } else {
+                throw new VendorServiceUnavailableException("Your vendor or service are not registered in our system, please contact our admin");
+            }
+        }else {
+
+            log.info("final result from database = {}", true);
+            removeMdc();
+
+            vidaStatusOcrDto.setMatch(true);
+            vidaStatusOcrDto.setScore(null);
+
+            return vidaStatusOcrDto;
         }
     }
 

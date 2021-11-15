@@ -30,4 +30,6 @@ public class VidaStatusOcrDto {
     private String tanggalLahir;
     private String statusPerkawinan;
     private String kelurahanDesa;
+    private Boolean match;
+    private Double score;
 }
